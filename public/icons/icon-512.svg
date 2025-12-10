@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#0D0D0F"/>
+  <rect x="32" y="32" width="448" height="448" rx="64" fill="url(#grad)"/>
+  <!-- Dumbbell icon -->
+  <g transform="translate(128, 176)">
+    <!-- Left weight -->
+    <rect x="0" y="24" width="48" height="112" rx="8" fill="#FF6B35"/>
+    <rect x="8" y="0" width="32" height="160" rx="8" fill="#FF8255"/>
+    <!-- Bar -->
+    <rect x="48" y="64" width="160" height="32" rx="4" fill="#FAFAFA"/>
+    <!-- Right weight -->
+    <rect x="208" y="24" width="48" height="112" rx="8" fill="#FF6B35"/>
+    <rect x="216" y="0" width="32" height="160" rx="8" fill="#FF8255"/>
+  </g>
+  <defs>
+    <linearGradient id="grad" x1="32" y1="32" x2="480" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1C1C21"/>
+      <stop offset="1" stop-color="#151518"/>
+    </linearGradient>
+  </defs>
+</svg>
