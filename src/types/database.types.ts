@@ -33,6 +33,7 @@ export interface Database {
           display_name?: string | null;
           settings_json?: Json | null;
         };
+        Relationships: [];
       };
       muscle_groups: {
         Row: {
@@ -53,6 +54,7 @@ export interface Database {
           slug?: string;
           order_index?: number;
         };
+        Relationships: [];
       };
       exercises: {
         Row: {
@@ -82,6 +84,15 @@ export interface Database {
           is_global?: boolean;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "exercises_primary_muscle_group_id_fkey";
+            columns: ["primary_muscle_group_id"];
+            isOneToOne: false;
+            referencedRelation: "muscle_groups";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       exercise_aliases: {
         Row: {
@@ -102,6 +113,15 @@ export interface Database {
           alias?: string;
           normalized_alias?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "exercise_aliases_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       workout_sessions: {
         Row: {
@@ -131,6 +151,15 @@ export interface Database {
           is_completed?: boolean;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "workout_sessions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       workout_exercises: {
         Row: {
@@ -157,6 +186,22 @@ export interface Database {
           note?: string | null;
           perceived_difficulty?: PerceivedDifficulty | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: "workout_exercises_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workout_exercises_workout_id_fkey";
+            columns: ["workout_id"];
+            isOneToOne: false;
+            referencedRelation: "workout_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       workout_sets: {
         Row: {
@@ -189,6 +234,15 @@ export interface Database {
           is_warmup?: boolean;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "workout_sets_workout_exercise_id_fkey";
+            columns: ["workout_exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "workout_exercises";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       workout_templates: {
         Row: {
@@ -209,6 +263,15 @@ export interface Database {
           name?: string;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "workout_templates_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       workout_template_exercises: {
         Row: {
@@ -229,6 +292,22 @@ export interface Database {
           exercise_id?: string;
           order_index?: number;
         };
+        Relationships: [
+          {
+            foreignKeyName: "workout_template_exercises_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workout_template_exercises_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "workout_templates";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: {
