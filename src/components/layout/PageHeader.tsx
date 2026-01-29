@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 
 interface PageHeaderProps {
   title: string;
@@ -17,20 +16,33 @@ export function PageHeader({
   const router = useRouter();
 
   return (
-    <header className="flex-between mb-lg">
-      <div className="flex items-center gap-sm">
-        {showBack && (
-          <button
-            onClick={() => router.back()}
-            className="btn btn-ghost btn-icon"
-            style={{ marginLeft: "-0.5rem" }}
-          >
-            <ChevronLeft size={24} />
-          </button>
-        )}
-        <h1 className="heading-1">{title}</h1>
+    <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4 -mx-4 -mt-6 mb-6">
+      <div className="flex items-center justify-between max-w-2xl mx-auto">
+        <div className="flex items-center gap-4">
+          {showBack && (
+            <button
+              onClick={() => router.back()}
+              className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+          )}
+          <h1 className="text-xl font-bold text-white">{title}</h1>
+        </div>
+        {action && <div>{action}</div>}
       </div>
-      {action && <div>{action}</div>}
     </header>
   );
 }

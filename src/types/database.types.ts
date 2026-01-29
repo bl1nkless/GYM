@@ -368,6 +368,8 @@ export interface WorkoutExerciseLocal {
   perceivedDifficulty: PerceivedDifficulty | null;
   sets: WorkoutSetLocal[];
   recommendedWeight: number | null;
+  alternativeExercise?: ExerciseWithMuscleGroup | null;
+  alternativeWeight?: number | null;
   isSaved: boolean;
 }
 

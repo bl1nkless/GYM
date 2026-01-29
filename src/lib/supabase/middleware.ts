@@ -29,10 +29,16 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refreshing the auth token
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const {
+      data: { user: supabaseUser },
+    } = await supabase.auth.getUser();
+    user = supabaseUser;
+  } catch (error) {
+    console.error("Supabase auth fetch failed in middleware.", error);
+    return supabaseResponse;
+  }
 
   // Protected routes - redirect to auth if not logged in
   if (!user && request.nextUrl.pathname.startsWith("/app")) {

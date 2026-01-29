@@ -2,16 +2,85 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/layout";
+import Link from "next/link";
 import { ExercisePickerModal } from "@/components/workouts/ExercisePickerModal";
 import { ExerciseBlock } from "@/components/workouts/ExerciseBlock";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Check, Loader2, Save } from "lucide-react";
 import type {
   WorkoutExerciseLocal,
   ExerciseWithMuscleGroup,
   PerceivedDifficulty,
 } from "@/types/database.types";
+
+interface WorkoutSetRow {
+  id: string;
+  weight: number;
+  reps: number;
+  is_warmup: boolean;
+  set_index: number;
+}
+
+interface WorkoutExerciseRow {
+  id: string;
+  order_index: number;
+  perceived_difficulty: PerceivedDifficulty | null;
+  note: string | null;
+  exercises: ExerciseWithMuscleGroup;
+  workout_sets: WorkoutSetRow[];
+}
+
+interface ActiveWorkoutSessionRow {
+  id: string;
+  name: string | null;
+  workout_exercises: WorkoutExerciseRow[];
+}
+
+function parseAlternativeNote(note: string | null): {
+  alternativeExerciseId: string | null;
+  alternativeWeight: number | null;
+} {
+  if (!note) {
+    return { alternativeExerciseId: null, alternativeWeight: null };
+  }
+
+  try {
+    const parsed = JSON.parse(note) as {
+      alternativeExerciseId?: string;
+      alternativeWeight?: number | string | null;
+    };
+
+    const alternativeExerciseId =
+      typeof parsed.alternativeExerciseId === "string"
+        ? parsed.alternativeExerciseId
+        : null;
+    const alternativeWeight =
+      parsed.alternativeWeight === null || parsed.alternativeWeight === undefined
+        ? null
+        : typeof parsed.alternativeWeight === "number"
+        ? parsed.alternativeWeight
+        : Number.isNaN(Number(parsed.alternativeWeight))
+        ? null
+        : Number(parsed.alternativeWeight);
+
+    return { alternativeExerciseId, alternativeWeight };
+  } catch {
+    return { alternativeExerciseId: null, alternativeWeight: null };
+  }
+}
+
+function buildAlternativeNote(
+  alternativeExerciseId: string | null,
+  alternativeWeight: number | null
+): string | null {
+  if (!alternativeExerciseId) {
+    return null;
+  }
+
+  return JSON.stringify({
+    alternativeExerciseId,
+    alternativeWeight,
+  });
+}
 
 export default function NewWorkoutPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -24,15 +93,137 @@ export default function NewWorkoutPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Создаём сессию тренировки при загрузке страницы
+  // Create or restore workout session on page load
   useEffect(() => {
-    async function createSession() {
+    let cancelled = false;
+
+    async function initSession() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
         router.push("/auth");
         return;
+      }
+
+      const storedSessionId =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("activeWorkoutId")
+          : null;
+
+      if (storedSessionId) {
+        const { data: existingSession, error: existingError } = await supabase
+          .from("workout_sessions")
+          .select(
+            `
+            id,
+            name,
+            workout_exercises (
+              id,
+              order_index,
+              perceived_difficulty,
+              note,
+              exercises (
+                *,
+                muscle_groups (*)
+              ),
+              workout_sets (
+                id,
+                weight,
+                reps,
+                is_warmup,
+                set_index
+              )
+            )
+          `
+          )
+          .eq("id", storedSessionId)
+          .eq("user_id", user.id)
+          .eq("is_completed", false)
+          .single();
+
+        if (!existingError && existingSession) {
+          const session = existingSession as ActiveWorkoutSessionRow;
+          const sortedExercises = (session.workout_exercises || [])
+            .slice()
+            .sort((a, b) => a.order_index - b.order_index);
+
+          const alternativeByExerciseId = new Map<
+            string,
+            { alternativeExerciseId: string | null; alternativeWeight: number | null }
+          >();
+          const alternativeIds: string[] = [];
+
+          sortedExercises.forEach((we) => {
+            const parsed = parseAlternativeNote(we.note);
+            alternativeByExerciseId.set(we.id, parsed);
+            if (parsed.alternativeExerciseId) {
+              alternativeIds.push(parsed.alternativeExerciseId);
+            }
+          });
+
+          const alternativeMap = new Map<string, ExerciseWithMuscleGroup>();
+          if (alternativeIds.length > 0) {
+            const { data: alternativeExercises } = await supabase
+              .from("exercises")
+              .select(
+                `
+                *,
+                muscle_groups (*)
+              `
+              )
+              .in("id", alternativeIds);
+
+            (alternativeExercises || []).forEach((exercise) => {
+              alternativeMap.set(
+                exercise.id,
+                exercise as ExerciseWithMuscleGroup
+              );
+            });
+          }
+
+          const restoredExercises: WorkoutExerciseLocal[] = sortedExercises.map(
+            (we) => {
+              const alternative = alternativeByExerciseId.get(we.id);
+              const alternativeExercise = alternative?.alternativeExerciseId
+                ? alternativeMap.get(alternative.alternativeExerciseId) ?? null
+                : null;
+
+              return {
+                id: we.id,
+                exercise: we.exercises,
+                perceivedDifficulty: we.perceived_difficulty,
+                sets: (we.workout_sets || [])
+                  .slice()
+                  .sort((a, b) => a.set_index - b.set_index)
+                  .map((set) => ({
+                    id: set.id,
+                    weight: set.weight,
+                    reps: set.reps,
+                    isWarmup: set.is_warmup,
+                    isSaved: true,
+                  })),
+                recommendedWeight: null,
+                alternativeExercise,
+                alternativeWeight: alternativeExercise
+                  ? alternative?.alternativeWeight ?? null
+                  : null,
+                isSaved: true,
+              };
+            }
+          );
+
+          if (!cancelled) {
+            setSessionId(session.id);
+            setWorkoutName(session.name || "");
+            setExercises(restoredExercises);
+            setLoading(false);
+          }
+          return;
+        }
+
+        window.localStorage.removeItem("activeWorkoutId");
+        window.dispatchEvent(new Event("active-workout-change"));
       }
 
       const { data, error } = await supabase
@@ -48,17 +239,25 @@ export default function NewWorkoutPage() {
 
       if (error) {
         console.error("Error creating session:", error);
+        if (!cancelled) setLoading(false);
         return;
       }
 
-      setSessionId(data.id);
-      setLoading(false);
+      window.localStorage.setItem("activeWorkoutId", data.id);
+      window.dispatchEvent(new Event("active-workout-change"));
+      if (!cancelled) {
+        setSessionId(data.id);
+        setLoading(false);
+      }
     }
 
-    createSession();
+    initSession();
+    return () => {
+      cancelled = true;
+    };
   }, [supabase, router]);
 
-  // Получить рекомендованный вес на основе истории
+  // Get recommended weight based on history
   const getRecommendedWeight = useCallback(
     async (exerciseId: string): Promise<number | null> => {
       const {
@@ -66,22 +265,14 @@ export default function NewWorkoutPage() {
       } = await supabase.auth.getUser();
       if (!user) return null;
 
-      // Находим последнюю тренировку с этим упражнением
       const { data } = await supabase
         .from("workout_exercises")
         .select(
           `
-        perceived_difficulty,
-        workout_sessions!inner (
-          user_id,
-          performed_at
-        ),
-        workout_sets (
-          weight,
-          reps,
-          is_warmup
-        )
-      `
+          perceived_difficulty,
+          workout_sessions!inner (user_id, performed_at),
+          workout_sets (weight, reps, is_warmup)
+        `
         )
         .eq("exercise_id", exerciseId)
         .eq("workout_sessions.user_id", user.id)
@@ -97,7 +288,6 @@ export default function NewWorkoutPage() {
 
       if (workingSets.length === 0) return null;
 
-      // Берём вес последнего рабочего подхода
       const prevWeight = workingSets[workingSets.length - 1].weight;
       const step = 2.5;
 
@@ -105,7 +295,6 @@ export default function NewWorkoutPage() {
         case "easy":
           return prevWeight + step;
         case "hard":
-          return prevWeight; // Оставляем тот же
         case "ok":
         default:
           return prevWeight;
@@ -114,14 +303,13 @@ export default function NewWorkoutPage() {
     [supabase]
   );
 
-  // Добавить упражнение в тренировку
+  // Add exercise to workout
   const handleSelectExercise = useCallback(
     async (exercise: ExerciseWithMuscleGroup) => {
       if (!sessionId) return;
 
       const orderIndex = exercises.length;
 
-      // Создаём workout_exercise в БД
       const { data, error } = await supabase
         .from("workout_exercises")
         .insert({
@@ -138,10 +326,8 @@ export default function NewWorkoutPage() {
         return;
       }
 
-      // Получаем рекомендованный вес
       const recommendedWeight = await getRecommendedWeight(exercise.id);
 
-      // Добавляем в локальный стейт
       const newExercise: WorkoutExerciseLocal = {
         id: data.id,
         exercise,
@@ -156,6 +342,8 @@ export default function NewWorkoutPage() {
           },
         ],
         recommendedWeight,
+        alternativeExercise: null,
+        alternativeWeight: null,
         isSaved: true,
       };
 
@@ -165,7 +353,6 @@ export default function NewWorkoutPage() {
     [sessionId, exercises.length, supabase, getRecommendedWeight]
   );
 
-  // Обновить подходы упражнения
   const handleUpdateSets = useCallback(
     (exerciseId: string, sets: WorkoutExerciseLocal["sets"]) => {
       setExercises((prev) =>
@@ -175,7 +362,6 @@ export default function NewWorkoutPage() {
     []
   );
 
-  // Обновить ощущение от упражнения
   const handleUpdateDifficulty = useCallback(
     async (exerciseId: string, difficulty: PerceivedDifficulty) => {
       setExercises((prev) =>
@@ -192,17 +378,135 @@ export default function NewWorkoutPage() {
     [supabase]
   );
 
-  // Удалить упражнение
+  const saveAlternativeNote = useCallback(
+    async (
+      exerciseId: string,
+      alternativeExerciseId: string | null,
+      alternativeWeight: number | null
+    ) => {
+      const note = buildAlternativeNote(
+        alternativeExerciseId,
+        alternativeWeight
+      );
+
+      const { error } = await supabase
+        .from("workout_exercises")
+        .update({ note })
+        .eq("id", exerciseId);
+
+      if (error) {
+        console.error("Error saving alternative exercise:", error);
+      }
+    },
+    [supabase]
+  );
+
+  const handleReplaceExercise = useCallback(
+    async (exerciseId: string, newExercise: ExerciseWithMuscleGroup) => {
+      const { error } = await supabase
+        .from("workout_exercises")
+        .update({
+          exercise_id: newExercise.id,
+          perceived_difficulty: null,
+          note: null,
+        })
+        .eq("id", exerciseId);
+
+      if (error) {
+        console.error("Error replacing exercise:", error);
+        return;
+      }
+
+      const recommendedWeight = await getRecommendedWeight(newExercise.id);
+
+      setExercises((prev) =>
+        prev.map((ex) =>
+          ex.id === exerciseId
+            ? {
+                ...ex,
+                exercise: newExercise,
+                perceivedDifficulty: null,
+                recommendedWeight,
+                alternativeExercise: null,
+                alternativeWeight: null,
+              }
+            : ex
+        )
+      );
+    },
+    [supabase, getRecommendedWeight]
+  );
+
+  const handleSetAlternative = useCallback(
+    async (exerciseId: string, newExercise: ExerciseWithMuscleGroup) => {
+      const recommendedWeight = await getRecommendedWeight(newExercise.id);
+
+      setExercises((prev) =>
+        prev.map((ex) =>
+          ex.id === exerciseId
+            ? {
+                ...ex,
+                alternativeExercise: newExercise,
+                alternativeWeight: recommendedWeight,
+              }
+            : ex
+        )
+      );
+
+      await saveAlternativeNote(
+        exerciseId,
+        newExercise.id,
+        recommendedWeight
+      );
+    },
+    [getRecommendedWeight, saveAlternativeNote]
+  );
+
+  const handleClearAlternative = useCallback(
+    async (exerciseId: string) => {
+      setExercises((prev) =>
+        prev.map((ex) =>
+          ex.id === exerciseId
+            ? { ...ex, alternativeExercise: null, alternativeWeight: null }
+            : ex
+        )
+      );
+
+      await saveAlternativeNote(exerciseId, null, null);
+    },
+    [saveAlternativeNote]
+  );
+
+  const handleUpdateAlternativeWeight = useCallback(
+    (exerciseId: string, weight: number | null) => {
+      setExercises((prev) =>
+        prev.map((ex) =>
+          ex.id === exerciseId ? { ...ex, alternativeWeight: weight } : ex
+        )
+      );
+    },
+    []
+  );
+
+  const handleSaveAlternativeWeight = useCallback(
+    async (exerciseId: string, weight: number | null) => {
+      const exercise = exercises.find((ex) => ex.id === exerciseId);
+      const alternativeExerciseId = exercise?.alternativeExercise?.id ?? null;
+      if (!alternativeExerciseId) return;
+
+      await saveAlternativeNote(exerciseId, alternativeExerciseId, weight);
+    },
+    [exercises, saveAlternativeNote]
+  );
+
   const handleDeleteExercise = useCallback(
     async (exerciseId: string) => {
       await supabase.from("workout_exercises").delete().eq("id", exerciseId);
-
       setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId));
     },
     [supabase]
   );
 
-  // Сохранить подход в БД
   const handleSaveSet = useCallback(
     async (
       workoutExerciseId: string,
@@ -229,7 +533,6 @@ export default function NewWorkoutPage() {
         return;
       }
 
-      // Обновляем ID в локальном стейте
       setExercises((prev) =>
         prev.map((ex) =>
           ex.id === workoutExerciseId
@@ -248,13 +551,12 @@ export default function NewWorkoutPage() {
     [supabase]
   );
 
-  // Завершить тренировку
   const handleFinishWorkout = async () => {
     if (!sessionId) return;
 
     setSaving(true);
 
-    // Сохраняем все несохранённые подходы
+    // Save all unsaved sets
     for (const exercise of exercises) {
       for (let i = 0; i < exercise.sets.length; i++) {
         const set = exercise.sets[i];
@@ -271,7 +573,7 @@ export default function NewWorkoutPage() {
       }
     }
 
-    // Обновляем название и статус тренировки
+    // Update workout name and status
     await supabase
       .from("workout_sessions")
       .update({
@@ -280,93 +582,155 @@ export default function NewWorkoutPage() {
       })
       .eq("id", sessionId);
 
+    window.localStorage.removeItem("activeWorkoutId");
+    window.dispatchEvent(new Event("active-workout-change"));
     router.push("/app/workouts");
   };
 
   if (loading) {
     return (
-      <div className="flex-center" style={{ height: "60vh" }}>
-        <div className="spinner" />
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <>
-      <PageHeader
-        title="Новая тренировка"
-        showBack
-        action={
-          exercises.length > 0 && (
+    <div className="min-h-screen bg-black pb-32">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/app/workouts"
+              className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </Link>
+            <h1 className="text-xl font-bold text-white">Новая тренировка</h1>
+          </div>
+
+          {exercises.length > 0 && (
             <button
-              className="btn btn-primary btn-sm"
               onClick={handleFinishWorkout}
               disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-all disabled:opacity-50"
             >
               {saving ? (
-                <Loader2
-                  size={16}
-                  style={{ animation: "spin 0.8s linear infinite" }}
-                />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Check size={16} />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
               )}
               Готово
             </button>
-          )
-        }
-      />
+          )}
+        </div>
+      </header>
 
-      {/* Название тренировки */}
-      <div className="input-group mb-lg">
-        <input
-          type="text"
-          className="input"
-          placeholder="Название тренировки (опционально)"
-          value={workoutName}
-          onChange={(e) => setWorkoutName(e.target.value)}
-        />
-      </div>
-
-      {/* Список упражнений */}
-      <div className="flex flex-col gap-md mb-lg">
-        {exercises.map((exercise) => (
-          <ExerciseBlock
-            key={exercise.id}
-            exercise={exercise}
-            onUpdateSets={(sets) => handleUpdateSets(exercise.id, sets)}
-            onUpdateDifficulty={(d) => handleUpdateDifficulty(exercise.id, d)}
-            onDelete={() => handleDeleteExercise(exercise.id)}
-            onSaveSet={(setIndex, weight, reps, isWarmup, tempId) =>
-              handleSaveSet(
-                exercise.id,
-                setIndex,
-                weight,
-                reps,
-                isWarmup,
-                tempId
-              )
-            }
+      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+        {/* Workout Name */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider ml-1">
+            Название
+          </label>
+          <input
+            type="text"
+            value={workoutName}
+            onChange={(e) => setWorkoutName(e.target.value)}
+            placeholder="Название тренировки (опционально)"
+            className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-zinc-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
           />
-        ))}
-      </div>
+        </div>
 
-      {/* Кнопка добавления упражнения */}
-      <button
-        className="btn btn-secondary btn-wide"
-        onClick={() => setShowExercisePicker(true)}
-      >
-        <Plus size={20} />
-        Добавить упражнение
-      </button>
+        {/* Exercise List */}
+        <div className="space-y-4">
+          {exercises.map((exercise) => (
+            <ExerciseBlock
+              key={exercise.id}
+              exercise={exercise}
+              onUpdateSets={(sets) => handleUpdateSets(exercise.id, sets)}
+              onUpdateDifficulty={(d) => handleUpdateDifficulty(exercise.id, d)}
+              onReplaceExercise={(newExercise) =>
+                handleReplaceExercise(exercise.id, newExercise)
+              }
+              onSetAlternative={(newExercise) =>
+                handleSetAlternative(exercise.id, newExercise)
+              }
+              onClearAlternative={() => handleClearAlternative(exercise.id)}
+              onUpdateAlternativeWeight={(weight) =>
+                handleUpdateAlternativeWeight(exercise.id, weight)
+              }
+              onSaveAlternativeWeight={(weight) =>
+                handleSaveAlternativeWeight(exercise.id, weight)
+              }
+              onDelete={() => handleDeleteExercise(exercise.id)}
+              onSaveSet={(setIndex, weight, reps, isWarmup, tempId) =>
+                handleSaveSet(
+                  exercise.id,
+                  setIndex,
+                  weight,
+                  reps,
+                  isWarmup,
+                  tempId
+                )
+              }
+            />
+          ))}
+        </div>
 
-      {/* Модалка выбора упражнения */}
+        {/* Add Exercise Button */}
+        <button
+          onClick={() => setShowExercisePicker(true)}
+          className="w-full py-4 rounded-2xl border-2 border-dashed border-zinc-800 text-zinc-500 font-semibold hover:border-orange-500/50 hover:text-orange-400 hover:bg-orange-500/10 transition-all duration-200 flex items-center justify-center gap-2"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Добавить упражнение
+        </button>
+      </main>
+
+      {/* Exercise Picker Modal */}
       {showExercisePicker && (
         <ExercisePickerModal
           onSelect={handleSelectExercise}
           onClose={() => setShowExercisePicker(false)}
         />
       )}
-    </>
+    </div>
   );
 }

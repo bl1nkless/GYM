@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader } from "@/components/layout";
 import { createClient } from "@/lib/supabase/client";
-import { Calendar, Hash, Dumbbell } from "lucide-react";
 import type { MuscleAnalytics } from "@/types/database.types";
 
 const PERIOD_OPTIONS = [
@@ -13,11 +11,11 @@ const PERIOD_OPTIONS = [
   { days: 90, label: "90 дней" },
 ];
 
-function getStatusClass(daysAgo: number | null): string {
-  if (daysAgo === null) return "";
-  if (daysAgo <= 3) return "fresh";
-  if (daysAgo <= 7) return "normal";
-  return "overdue";
+function getStatusColor(daysAgo: number | null): string {
+  if (daysAgo === null) return "bg-zinc-700";
+  if (daysAgo <= 3) return "bg-green-500";
+  if (daysAgo <= 7) return "bg-yellow-500";
+  return "bg-red-500";
 }
 
 function formatLastTrained(dateStr: string | null): {
@@ -41,62 +39,6 @@ function formatLastTrained(dateStr: string | null): {
   };
 }
 
-function MuscleCard({ data }: { data: MuscleAnalytics }) {
-  const { text: lastTrainedText, daysAgo } = formatLastTrained(
-    data.lastTrainedAt
-  );
-  const statusClass = getStatusClass(daysAgo);
-
-  return (
-    <div className="card muscle-card animate-slide-in">
-      <div className="muscle-info">
-        <span className="muscle-name">{data.muscleGroupName}</span>
-        <div className="muscle-stats">
-          <div className="muscle-stat">
-            <Calendar size={12} />
-            <span>{lastTrainedText}</span>
-          </div>
-          <div className="muscle-stat">
-            <Hash size={12} />
-            <span>{data.sessionsCount} тр.</span>
-          </div>
-          {data.exercisesInLastSession > 0 && (
-            <div className="muscle-stat">
-              <Dumbbell size={12} />
-              <span>{data.exercisesInLastSession} упр.</span>
-            </div>
-          )}
-        </div>
-      </div>
-      {statusClass && (
-        <div className="muscle-status">
-          <div className={`status-indicator ${statusClass}`} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AnalyticsSkeleton() {
-  return (
-    <div className="flex flex-col gap-sm">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="card" style={{ padding: "var(--space-md)" }}>
-          <div
-            className="skeleton"
-            style={{
-              width: "40%",
-              height: 20,
-              marginBottom: "var(--space-sm)",
-            }}
-          />
-          <div className="skeleton" style={{ width: "70%", height: 14 }} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function AnalyticsPage() {
   const [periodDays, setPeriodDays] = useState(30);
   const [data, setData] = useState<MuscleAnalytics[]>([]);
@@ -116,7 +58,6 @@ export default function AnalyticsPage() {
       const fromDate = new Date();
       fromDate.setDate(fromDate.getDate() - periodDays);
 
-      // Получаем все тренировки пользователя за период с деталями
       const { data: workouts, error } = await supabase
         .from("workout_sessions")
         .select(
@@ -142,7 +83,6 @@ export default function AnalyticsPage() {
         return;
       }
 
-      // Получаем все мышечные группы
       const { data: muscleGroups } = await supabase
         .from("muscle_groups")
         .select("*")
@@ -153,7 +93,7 @@ export default function AnalyticsPage() {
         return;
       }
 
-      // Агрегируем данные по мышечным группам
+      // Aggregate data by muscle groups
       const analyticsMap = new Map<
         number,
         {
@@ -163,7 +103,6 @@ export default function AnalyticsPage() {
         }
       >();
 
-      // Инициализируем для всех групп
       muscleGroups.forEach((mg) => {
         analyticsMap.set(mg.id, {
           lastTrainedAt: null,
@@ -172,7 +111,6 @@ export default function AnalyticsPage() {
         });
       });
 
-      // Группируем тренировки по мышечным группам
       const lastSessionByMuscle = new Map<number, string>();
 
       (workouts || []).forEach((session) => {
@@ -184,7 +122,6 @@ export default function AnalyticsPage() {
             const analytics = analyticsMap.get(muscleId);
             if (!analytics) return;
 
-            // Обновляем последнюю тренировку
             if (
               !analytics.lastTrainedAt ||
               session.performed_at > analytics.lastTrainedAt
@@ -193,13 +130,11 @@ export default function AnalyticsPage() {
               lastSessionByMuscle.set(muscleId, session.id);
             }
 
-            // Добавляем сессию в подсчёт
             analytics.sessionsSet.add(session.id);
           }
         );
       });
 
-      // Подсчитываем упражнения в последней тренировке
       (workouts || []).forEach((session) => {
         (session.workout_exercises || []).forEach(
           (we: {
@@ -219,7 +154,6 @@ export default function AnalyticsPage() {
         );
       });
 
-      // Формируем финальный массив
       const result: MuscleAnalytics[] = muscleGroups.map((mg) => {
         const analytics = analyticsMap.get(mg.id)!;
         return {
@@ -231,7 +165,6 @@ export default function AnalyticsPage() {
         };
       });
 
-      // Сортируем: сначала те, что давно не тренировались
       result.sort((a, b) => {
         if (!a.lastTrainedAt && !b.lastTrainedAt) return 0;
         if (!a.lastTrainedAt) return -1;
@@ -250,71 +183,168 @@ export default function AnalyticsPage() {
   }, [supabase, periodDays]);
 
   return (
-    <>
-      <PageHeader title="Аналитика" />
+    <div className="min-h-screen bg-black pb-32">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-2xl font-bold text-white">Аналитика</h1>
+        </div>
+      </header>
 
-      {/* Выбор периода */}
-      <div className="analytics-period-selector">
-        {PERIOD_OPTIONS.map((option) => (
-          <button
-            key={option.days}
-            className={`period-btn ${
-              periodDays === option.days ? "active" : ""
-            }`}
-            onClick={() => setPeriodDays(option.days)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Легенда */}
-      <div
-        className="flex gap-md mb-lg"
-        style={{ fontSize: "0.75rem", color: "var(--text-tertiary)" }}
-      >
-        <div className="flex items-center gap-xs">
-          <div
-            className="status-indicator fresh"
-            style={{ width: 8, height: 8 }}
-          />
-          <span>≤ 3 дн.</span>
-        </div>
-        <div className="flex items-center gap-xs">
-          <div
-            className="status-indicator normal"
-            style={{ width: 8, height: 8 }}
-          />
-          <span>4-7 дн.</span>
-        </div>
-        <div className="flex items-center gap-xs">
-          <div
-            className="status-indicator overdue"
-            style={{ width: 8, height: 8 }}
-          />
-          <span>&gt; 7 дн.</span>
-        </div>
-      </div>
-
-      {/* Карточки */}
-      {loading ? (
-        <AnalyticsSkeleton />
-      ) : data.length === 0 ? (
-        <div className="empty-state">
-          <Dumbbell className="empty-icon" />
-          <h2 className="empty-title">Нет данных</h2>
-          <p className="empty-description">
-            Добавь первую тренировку, чтобы увидеть аналитику по мышечным
-            группам
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-sm">
-          {data.map((item) => (
-            <MuscleCard key={item.muscleGroupId} data={item} />
+      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+        {/* Period Selector */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {PERIOD_OPTIONS.map((option) => (
+            <button
+              key={option.days}
+              onClick={() => setPeriodDays(option.days)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap
+                ${
+                  periodDays === option.days
+                    ? "bg-orange-500 text-white"
+                    : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-700"
+                }`}
+            >
+              {option.label}
+            </button>
           ))}
         </div>
-      )}
-    </>
+
+        {/* Legend */}
+        <div className="flex gap-4 text-xs text-zinc-500">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <span>≤ 3 дн.</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span>4-7 дн.</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-500" />
+            <span>&gt; 7 дн.</span>
+          </div>
+        </div>
+
+        {/* Muscle Cards */}
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="h-20 bg-zinc-900 rounded-2xl animate-pulse border border-zinc-800"
+              />
+            ))}
+          </div>
+        ) : data.length === 0 ? (
+          <div className="text-center py-16">
+            <svg
+              className="w-16 h-16 mx-auto mb-4 text-zinc-700"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M4 6h2v12H4zM18 6h2v12h-2zM8 10h8v4H8z"
+              />
+            </svg>
+            <h2 className="text-lg font-semibold text-zinc-400 mb-2">
+              Нет данных
+            </h2>
+            <p className="text-sm text-zinc-600">
+              Добавь первую тренировку, чтобы увидеть аналитику
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {data.map((item) => {
+              const { text: lastTrainedText, daysAgo } = formatLastTrained(
+                item.lastTrainedAt
+              );
+              const statusColor = getStatusColor(daysAgo);
+
+              return (
+                <div
+                  key={item.muscleGroupId}
+                  className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 flex items-center justify-between"
+                >
+                  <div>
+                    <h3 className="font-semibold text-white mb-1">
+                      {item.muscleGroupName}
+                    </h3>
+                    <div className="flex items-center gap-4 text-xs text-zinc-500">
+                      <div className="flex items-center gap-1.5">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>{lastTrainedText}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                          />
+                        </svg>
+                        <span>{item.sessionsCount} тр.</span>
+                      </div>
+                      {item.exercisesInLastSession > 0 && (
+                        <div className="flex items-center gap-1.5">
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 6h2v12H4zM18 6h2v12h-2zM8 10h8v4H8z"
+                            />
+                          </svg>
+                          <span>{item.exercisesInLastSession} упр.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className={`w-3 h-3 rounded-full ${statusColor}`} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </main>
+
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </div>
   );
 }
