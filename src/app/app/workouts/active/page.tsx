@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ExercisePickerModal } from "@/components/workouts/ExercisePickerModal";
+import type { ExerciseWithMuscleGroup } from "@/types/database.types";
 
 // --- ТИПЫ (Локальные для макета) ---
 interface Exercise {
@@ -360,6 +362,7 @@ export default function ActiveWorkoutPage() {
   const [duration, setDuration] = useState(0);
   const [workoutName, setWorkoutName] = useState("День груди");
   const [exercises, setExercises] = useState<Exercise[]>(INITIAL_EXERCISES);
+  const [showExercisePicker, setShowExercisePicker] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -383,6 +386,16 @@ export default function ActiveWorkoutPage() {
 
   const handleDeleteExercise = (exerciseId: string) => {
     setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId));
+  };
+
+  const handleAddExercise = (exercise: ExerciseWithMuscleGroup) => {
+    const newExercise: Exercise = {
+      id: `new-${Date.now()}`,
+      name: exercise.name,
+      primary_muscle_group_id: exercise.primary_muscle_group_id,
+    };
+    setExercises((prev) => [...prev, newExercise]);
+    setShowExercisePicker(false);
   };
 
   const handleCloseWorkout = () => {
@@ -472,6 +485,7 @@ export default function ActiveWorkoutPage() {
         </div>
 
         <button
+          onClick={() => setShowExercisePicker(true)}
           className="w-full py-4 rounded-2xl border-2 border-dashed border-zinc-800 text-zinc-500 font-semibold 
                      hover:border-blue-500/50 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-200 flex items-center justify-center gap-2 group"
         >
@@ -502,6 +516,14 @@ export default function ActiveWorkoutPage() {
           </button>
         </div>
       </div>
+
+      {/* Exercise Picker Modal */}
+      {showExercisePicker && (
+        <ExercisePickerModal
+          onSelect={handleAddExercise}
+          onClose={() => setShowExercisePicker(false)}
+        />
+      )}
     </div>
   );
 }

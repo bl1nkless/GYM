@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
+import { TelegramProvider } from "@/components/providers/TelegramProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,7 +41,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={`${inter.variable}`}>{children}</body>
+      <head>
+        {/* Telegram WebApp SDK */}
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+      </head>
+      <body className={`${inter.variable}`}>
+        <TelegramProvider>{children}</TelegramProvider>
+      </body>
     </html>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ExercisePickerModal } from "@/components/workouts/ExercisePickerModal";
 import { ExerciseBlock } from "@/components/workouts/ExerciseBlock";
@@ -54,13 +54,14 @@ function parseAlternativeNote(note: string | null): {
         ? parsed.alternativeExerciseId
         : null;
     const alternativeWeight =
-      parsed.alternativeWeight === null || parsed.alternativeWeight === undefined
+      parsed.alternativeWeight === null ||
+      parsed.alternativeWeight === undefined
         ? null
         : typeof parsed.alternativeWeight === "number"
-        ? parsed.alternativeWeight
-        : Number.isNaN(Number(parsed.alternativeWeight))
-        ? null
-        : Number(parsed.alternativeWeight);
+          ? parsed.alternativeWeight
+          : Number.isNaN(Number(parsed.alternativeWeight))
+            ? null
+            : Number(parsed.alternativeWeight);
 
     return { alternativeExerciseId, alternativeWeight };
   } catch {
@@ -70,7 +71,7 @@ function parseAlternativeNote(note: string | null): {
 
 function buildAlternativeNote(
   alternativeExerciseId: string | null,
-  alternativeWeight: number | null
+  alternativeWeight: number | null,
 ): string | null {
   if (!alternativeExerciseId) {
     return null;
@@ -82,7 +83,7 @@ function buildAlternativeNote(
   });
 }
 
-export default function NewWorkoutPage() {
+function NewWorkoutContent() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseLocal[]>([]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
@@ -91,6 +92,8 @@ export default function NewWorkoutPage() {
   const [workoutName, setWorkoutName] = useState("");
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const templateId = searchParams.get("template");
   const supabase = createClient();
 
   // Create or restore workout session on page load
@@ -135,7 +138,7 @@ export default function NewWorkoutPage() {
                 set_index
               )
             )
-          `
+          `,
           )
           .eq("id", storedSessionId)
           .eq("user_id", user.id)
@@ -150,7 +153,10 @@ export default function NewWorkoutPage() {
 
           const alternativeByExerciseId = new Map<
             string,
-            { alternativeExerciseId: string | null; alternativeWeight: number | null }
+            {
+              alternativeExerciseId: string | null;
+              alternativeWeight: number | null;
+            }
           >();
           const alternativeIds: string[] = [];
 
@@ -170,14 +176,14 @@ export default function NewWorkoutPage() {
                 `
                 *,
                 muscle_groups (*)
-              `
+              `,
               )
               .in("id", alternativeIds);
 
             (alternativeExercises || []).forEach((exercise) => {
               alternativeMap.set(
                 exercise.id,
-                exercise as ExerciseWithMuscleGroup
+                exercise as ExerciseWithMuscleGroup,
               );
             });
           }
@@ -186,7 +192,8 @@ export default function NewWorkoutPage() {
             (we) => {
               const alternative = alternativeByExerciseId.get(we.id);
               const alternativeExercise = alternative?.alternativeExerciseId
-                ? alternativeMap.get(alternative.alternativeExerciseId) ?? null
+                ? (alternativeMap.get(alternative.alternativeExerciseId) ??
+                  null)
                 : null;
 
               return {
@@ -206,11 +213,11 @@ export default function NewWorkoutPage() {
                 recommendedWeight: null,
                 alternativeExercise,
                 alternativeWeight: alternativeExercise
-                  ? alternative?.alternativeWeight ?? null
+                  ? (alternative?.alternativeWeight ?? null)
                   : null,
                 isSaved: true,
               };
-            }
+            },
           );
 
           if (!cancelled) {
@@ -245,6 +252,98 @@ export default function NewWorkoutPage() {
 
       window.localStorage.setItem("activeWorkoutId", data.id);
       window.dispatchEvent(new Event("active-workout-change"));
+
+      // If template ID is provided, load exercises from template
+      if (templateId) {
+        const { data: templateData } = await supabase
+          .from("workout_templates")
+          .select(
+            `
+            name,
+            workout_template_exercises (
+              order_index,
+              exercises (
+                *,
+                muscle_groups (*)
+              )
+            )
+          `,
+          )
+          .eq("id", templateId)
+          .single();
+
+        if (templateData) {
+          // Set workout name from template
+          if (templateData.name) {
+            await supabase
+              .from("workout_sessions")
+              .update({ name: templateData.name })
+              .eq("id", data.id);
+            if (!cancelled) setWorkoutName(templateData.name);
+          }
+
+          // Sort template exercises by order_index
+          const sortedTemplateExercises = (
+            templateData.workout_template_exercises || []
+          )
+            .slice()
+            .sort(
+              (a: { order_index: number }, b: { order_index: number }) =>
+                a.order_index - b.order_index,
+            );
+
+          // Add each exercise from template to the workout
+          const addedExercises: WorkoutExerciseLocal[] = [];
+
+          for (let i = 0; i < sortedTemplateExercises.length; i++) {
+            const templateExercise = sortedTemplateExercises[i];
+            const exercise =
+              templateExercise.exercises as ExerciseWithMuscleGroup;
+
+            if (!exercise) continue;
+
+            const { data: weData, error: weError } = await supabase
+              .from("workout_exercises")
+              .insert({
+                workout_id: data.id,
+                exercise_id: exercise.id,
+                order_index: i,
+                perceived_difficulty: null,
+              })
+              .select()
+              .single();
+
+            if (weError || !weData) {
+              console.error("Error adding exercise from template:", weError);
+              continue;
+            }
+
+            addedExercises.push({
+              id: weData.id,
+              exercise,
+              perceivedDifficulty: null,
+              sets: [
+                {
+                  id: `temp-${Date.now()}-${i}`,
+                  weight: null,
+                  reps: null,
+                  isWarmup: false,
+                  isSaved: false,
+                },
+              ],
+              recommendedWeight: null,
+              alternativeExercise: null,
+              alternativeWeight: null,
+              isSaved: true,
+            });
+          }
+
+          if (!cancelled && addedExercises.length > 0) {
+            setExercises(addedExercises);
+          }
+        }
+      }
+
       if (!cancelled) {
         setSessionId(data.id);
         setLoading(false);
@@ -255,7 +354,7 @@ export default function NewWorkoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [supabase, router]);
+  }, [supabase, router, templateId]);
 
   // Get recommended weight based on history
   const getRecommendedWeight = useCallback(
@@ -272,7 +371,7 @@ export default function NewWorkoutPage() {
           perceived_difficulty,
           workout_sessions!inner (user_id, performed_at),
           workout_sets (weight, reps, is_warmup)
-        `
+        `,
         )
         .eq("exercise_id", exerciseId)
         .eq("workout_sessions.user_id", user.id)
@@ -300,7 +399,7 @@ export default function NewWorkoutPage() {
           return prevWeight;
       }
     },
-    [supabase]
+    [supabase],
   );
 
   // Add exercise to workout
@@ -350,24 +449,26 @@ export default function NewWorkoutPage() {
       setExercises((prev) => [...prev, newExercise]);
       setShowExercisePicker(false);
     },
-    [sessionId, exercises.length, supabase, getRecommendedWeight]
+    [sessionId, exercises.length, supabase, getRecommendedWeight],
   );
 
   const handleUpdateSets = useCallback(
     (exerciseId: string, sets: WorkoutExerciseLocal["sets"]) => {
       setExercises((prev) =>
-        prev.map((ex) => (ex.id === exerciseId ? { ...ex, sets } : ex))
+        prev.map((ex) => (ex.id === exerciseId ? { ...ex, sets } : ex)),
       );
     },
-    []
+    [],
   );
 
   const handleUpdateDifficulty = useCallback(
     async (exerciseId: string, difficulty: PerceivedDifficulty) => {
       setExercises((prev) =>
         prev.map((ex) =>
-          ex.id === exerciseId ? { ...ex, perceivedDifficulty: difficulty } : ex
-        )
+          ex.id === exerciseId
+            ? { ...ex, perceivedDifficulty: difficulty }
+            : ex,
+        ),
       );
 
       await supabase
@@ -375,18 +476,18 @@ export default function NewWorkoutPage() {
         .update({ perceived_difficulty: difficulty })
         .eq("id", exerciseId);
     },
-    [supabase]
+    [supabase],
   );
 
   const saveAlternativeNote = useCallback(
     async (
       exerciseId: string,
       alternativeExerciseId: string | null,
-      alternativeWeight: number | null
+      alternativeWeight: number | null,
     ) => {
       const note = buildAlternativeNote(
         alternativeExerciseId,
-        alternativeWeight
+        alternativeWeight,
       );
 
       const { error } = await supabase
@@ -398,7 +499,7 @@ export default function NewWorkoutPage() {
         console.error("Error saving alternative exercise:", error);
       }
     },
-    [supabase]
+    [supabase],
   );
 
   const handleReplaceExercise = useCallback(
@@ -430,11 +531,11 @@ export default function NewWorkoutPage() {
                 alternativeExercise: null,
                 alternativeWeight: null,
               }
-            : ex
-        )
+            : ex,
+        ),
       );
     },
-    [supabase, getRecommendedWeight]
+    [supabase, getRecommendedWeight],
   );
 
   const handleSetAlternative = useCallback(
@@ -449,17 +550,13 @@ export default function NewWorkoutPage() {
                 alternativeExercise: newExercise,
                 alternativeWeight: recommendedWeight,
               }
-            : ex
-        )
+            : ex,
+        ),
       );
 
-      await saveAlternativeNote(
-        exerciseId,
-        newExercise.id,
-        recommendedWeight
-      );
+      await saveAlternativeNote(exerciseId, newExercise.id, recommendedWeight);
     },
-    [getRecommendedWeight, saveAlternativeNote]
+    [getRecommendedWeight, saveAlternativeNote],
   );
 
   const handleClearAlternative = useCallback(
@@ -468,24 +565,24 @@ export default function NewWorkoutPage() {
         prev.map((ex) =>
           ex.id === exerciseId
             ? { ...ex, alternativeExercise: null, alternativeWeight: null }
-            : ex
-        )
+            : ex,
+        ),
       );
 
       await saveAlternativeNote(exerciseId, null, null);
     },
-    [saveAlternativeNote]
+    [saveAlternativeNote],
   );
 
   const handleUpdateAlternativeWeight = useCallback(
     (exerciseId: string, weight: number | null) => {
       setExercises((prev) =>
         prev.map((ex) =>
-          ex.id === exerciseId ? { ...ex, alternativeWeight: weight } : ex
-        )
+          ex.id === exerciseId ? { ...ex, alternativeWeight: weight } : ex,
+        ),
       );
     },
-    []
+    [],
   );
 
   const handleSaveAlternativeWeight = useCallback(
@@ -496,7 +593,7 @@ export default function NewWorkoutPage() {
 
       await saveAlternativeNote(exerciseId, alternativeExerciseId, weight);
     },
-    [exercises, saveAlternativeNote]
+    [exercises, saveAlternativeNote],
   );
 
   const handleDeleteExercise = useCallback(
@@ -504,7 +601,7 @@ export default function NewWorkoutPage() {
       await supabase.from("workout_exercises").delete().eq("id", exerciseId);
       setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId));
     },
-    [supabase]
+    [supabase],
   );
 
   const handleSaveSet = useCallback(
@@ -514,7 +611,7 @@ export default function NewWorkoutPage() {
       weight: number,
       reps: number,
       isWarmup: boolean,
-      tempId?: string
+      tempId?: string,
     ) => {
       const { data, error } = await supabase
         .from("workout_sets")
@@ -541,14 +638,14 @@ export default function NewWorkoutPage() {
                 sets: ex.sets.map((s) =>
                   s.id === tempId || s.id === data.id
                     ? { ...s, id: data.id, isSaved: true }
-                    : s
+                    : s,
                 ),
               }
-            : ex
-        )
+            : ex,
+        ),
       );
     },
-    [supabase]
+    [supabase],
   );
 
   const handleFinishWorkout = async () => {
@@ -567,7 +664,7 @@ export default function NewWorkoutPage() {
             set.weight,
             set.reps,
             set.isWarmup,
-            set.id
+            set.id,
           );
         }
       }
@@ -695,7 +792,7 @@ export default function NewWorkoutPage() {
                   weight,
                   reps,
                   isWarmup,
-                  tempId
+                  tempId,
                 )
               }
             />
@@ -732,5 +829,19 @@ export default function NewWorkoutPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function NewWorkoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <NewWorkoutContent />
+    </Suspense>
   );
 }
