@@ -216,12 +216,12 @@ function TemplatePickerModal({
 
   const handleStartEmpty = () => {
     onClose();
-    router.push("/app/workouts/active");
+    router.push("/app/workouts/new");
   };
 
   const handleStartWithTemplate = (templateId: string) => {
     onClose();
-    router.push(`/app/workouts/active?template=${templateId}`);
+    router.push(`/app/workouts/new?template=${templateId}`);
   };
 
   if (!isOpen) return null;
@@ -406,7 +406,7 @@ export function NewWorkoutFAB() {
   const handleClick = (e: React.MouseEvent) => {
     if (isActive) {
       // Если есть активная тренировка - переходим к ней
-      router.push("/app/workouts/active");
+      router.push("/app/workouts/new");
     } else {
       // Если нет активной тренировки - показываем выбор шаблона
       e.preventDefault();
