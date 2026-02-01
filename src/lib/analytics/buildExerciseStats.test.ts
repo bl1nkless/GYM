@@ -56,10 +56,10 @@ describe("buildExerciseStats", () => {
 
     expect(result.length).toBe(2);
     expect(result.find((e) => e.exerciseId === "e1")?.exerciseName).toBe(
-      "Squat",
+      "Squat"
     );
     expect(result.find((e) => e.exerciseId === "e2")?.exerciseName).toBe(
-      "Deadlift",
+      "Deadlift"
     );
   });
 

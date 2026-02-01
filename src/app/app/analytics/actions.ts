@@ -42,7 +42,7 @@ type ActionResult<T = void> =
  * но эта функция подготовлена для миграции на серверное хранение.
  */
 export async function saveBodyWeight(
-  input: unknown,
+  input: unknown
 ): Promise<ActionResult<{ weight: number; goalWeight: number }>> {
   try {
     const data = SaveBodyWeightSchema.parse(input);
@@ -85,7 +85,7 @@ export async function saveBodyWeight(
  * Сейчас хранится в localStorage, подготовлено для БД.
  */
 export async function toggleTrackedExercise(
-  input: unknown,
+  input: unknown
 ): Promise<ActionResult> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -190,7 +190,7 @@ export async function getExerciseHistory(exerciseIds: string[]) {
         exercises (name, muscle_groups (name)),
         workout_sessions!inner (user_id, performed_at),
         workout_sets (weight)
-      `,
+      `
       )
       .in("exercise_id", exerciseIds)
       .eq("workout_sessions.user_id", user.id);

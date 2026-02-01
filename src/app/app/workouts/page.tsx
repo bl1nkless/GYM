@@ -71,7 +71,7 @@ function QuickStartSection() {
               )
             )
           )
-        `,
+        `
         )
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
@@ -118,7 +118,7 @@ function QuickStartSection() {
                   )
                 )
               )
-            `,
+            `
             )
             .eq("user_id", user.id)
             .order("created_at", { ascending: false })
@@ -168,25 +168,25 @@ function QuickStartSection() {
 
   return (
     <section>
-      <div className="flex justify-between items-end mb-4">
+      <div className="mb-4 flex items-end justify-between">
         <h2 className="text-lg font-semibold text-white">Быстрый старт</h2>
         <Link
           href="/app/templates"
-          className="text-xs text-orange-500 font-medium cursor-pointer hover:text-orange-400"
+          className="cursor-pointer text-xs font-medium text-orange-500 hover:text-orange-400"
         >
           Все шаблоны
         </Link>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+      <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
         {/* New Workout Card */}
         <Link
           href="/app/workouts/new"
-          className="flex-shrink-0 w-32 h-36 border-2 border-dashed border-zinc-700 hover:border-orange-500 rounded-xl flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-orange-500 hover:bg-zinc-900/50 transition-all group"
+          className="group flex h-36 w-32 flex-shrink-0 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-700 text-zinc-500 transition-all hover:border-orange-500 hover:bg-zinc-900/50 hover:text-orange-500"
         >
-          <div className="w-10 h-10 rounded-full bg-zinc-800 group-hover:bg-orange-500/20 flex items-center justify-center transition-colors">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 transition-colors group-hover:bg-orange-500/20">
             <svg
-              className="w-5 h-5"
+              className="h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -208,7 +208,7 @@ function QuickStartSection() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex-shrink-0 w-36 h-36 bg-zinc-900 rounded-xl animate-pulse border border-zinc-800"
+                className="h-36 w-36 flex-shrink-0 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900"
               />
             ))}
           </>
@@ -220,10 +220,10 @@ function QuickStartSection() {
             <Link
               key={template.id}
               href={`/app/workouts/new?template=${template.id}`}
-              className="flex-shrink-0 w-36 h-36 bg-zinc-900 rounded-xl p-4 flex flex-col justify-between border border-zinc-800 hover:border-zinc-700 cursor-pointer transition-colors"
+              className="flex h-36 w-36 flex-shrink-0 cursor-pointer flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-zinc-700"
             >
               <svg
-                className={`w-6 h-6 ${getTemplateColor(template.name)}`}
+                className={`h-6 w-6 ${getTemplateColor(template.name)}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -236,10 +236,10 @@ function QuickStartSection() {
                 />
               </svg>
               <div>
-                <h3 className="font-bold text-sm text-white leading-tight mb-0.5 truncate">
+                <h3 className="mb-0.5 truncate text-sm leading-tight font-bold text-white">
                   {template.name}
                 </h3>
-                <p className="text-xs text-zinc-500 truncate">
+                <p className="truncate text-xs text-zinc-500">
                   {getTemplateSub(template)}
                 </p>
               </div>
@@ -251,10 +251,10 @@ function QuickStartSection() {
           <button
             onClick={handleSeedTemplates}
             disabled={seeding}
-            className="flex-shrink-0 w-48 h-36 bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-xl p-4 flex flex-col items-center justify-center border border-orange-500/30 hover:border-orange-500/50 transition-all cursor-pointer"
+            className="flex h-36 w-48 flex-shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl border border-orange-500/30 bg-gradient-to-br from-orange-500/20 to-orange-600/10 p-4 transition-all hover:border-orange-500/50"
           >
             <svg
-              className="w-8 h-8 text-orange-500 mb-2"
+              className="mb-2 h-8 w-8 text-orange-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -266,10 +266,10 @@ function QuickStartSection() {
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
               />
             </svg>
-            <p className="text-sm font-medium text-orange-400 text-center">
+            <p className="text-center text-sm font-medium text-orange-400">
               {seeding ? "Загрузка..." : "Upper/Lower"}
             </p>
-            <p className="text-xs text-zinc-500 text-center mt-1">
+            <p className="mt-1 text-center text-xs text-zinc-500">
               Загрузить шаблоны
             </p>
           </button>
@@ -332,7 +332,7 @@ export default function WorkoutHome() {
               reps
             )
           )
-        `,
+        `
         )
         .eq("user_id", user.id)
         .order("performed_at", { ascending: false })
@@ -399,12 +399,12 @@ export default function WorkoutHome() {
       style={{ overscrollBehaviorY: "none" }}
     >
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+      <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
+        <div className="mx-auto flex max-w-2xl items-center justify-between">
           <h1 className="text-2xl font-bold text-white">Тренировки</h1>
-          <button className="p-2 text-zinc-400 hover:text-white bg-zinc-900 rounded-full transition-colors border border-zinc-800">
+          <button className="rounded-full border border-zinc-800 bg-zinc-900 p-2 text-zinc-400 transition-colors hover:text-white">
             <svg
-              className="w-5 h-5"
+              className="h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -420,13 +420,13 @@ export default function WorkoutHome() {
         </div>
       </header>
 
-      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+      <main className="mx-auto max-w-2xl space-y-6 px-4 pt-6">
         {/* Calendar Strip */}
-        <div className="flex justify-between items-center bg-zinc-900 rounded-2xl p-4 border border-zinc-800">
+        <div className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
           {weekDays.map((item, index) => (
             <div
               key={index}
-              className="flex flex-col items-center gap-2 cursor-pointer group"
+              className="group flex cursor-pointer flex-col items-center gap-2"
             >
               <span
                 className={`text-xs font-medium ${
@@ -438,8 +438,7 @@ export default function WorkoutHome() {
                 {item.day}
               </span>
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all
-                ${
+                className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all ${
                   item.active
                     ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
                     : "bg-transparent text-zinc-400 group-hover:bg-zinc-800"
@@ -447,7 +446,7 @@ export default function WorkoutHome() {
               >
                 {item.date}
               </div>
-              {item.active && <div className="w-1 h-1 rounded-full bg-white" />}
+              {item.active && <div className="h-1 w-1 rounded-full bg-white" />}
             </div>
           ))}
         </div>
@@ -457,21 +456,21 @@ export default function WorkoutHome() {
 
         {/* History */}
         <section>
-          <h2 className="text-lg font-semibold text-white mb-4">История</h2>
+          <h2 className="mb-4 text-lg font-semibold text-white">История</h2>
 
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-20 bg-zinc-900 rounded-2xl animate-pulse border border-zinc-800"
+                  className="h-20 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900"
                 />
               ))}
             </div>
           ) : workouts.length === 0 ? (
-            <div className="text-center py-12 text-zinc-500 text-sm">
+            <div className="py-12 text-center text-sm text-zinc-500">
               <svg
-                className="w-12 h-12 mx-auto mb-4 text-zinc-700"
+                className="mx-auto mb-4 h-12 w-12 text-zinc-700"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -491,13 +490,13 @@ export default function WorkoutHome() {
                 <Link
                   key={workout.id}
                   href={`/app/workouts/${workout.id}`}
-                  className="block bg-zinc-900 rounded-2xl p-4 border border-zinc-800 hover:border-zinc-700 transition-all active:scale-[0.99]"
+                  className="block rounded-2xl border border-zinc-800 bg-zinc-900 p-4 transition-all hover:border-zinc-700 active:scale-[0.99]"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
                         <svg
-                          className="w-5 h-5"
+                          className="h-5 w-5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -511,14 +510,14 @@ export default function WorkoutHome() {
                         </svg>
                       </div>
                       <div>
-                        <h3 className="font-bold text-white text-sm">
+                        <h3 className="text-sm font-bold text-white">
                           {workout.title}
                         </h3>
                         <p className="text-xs text-zinc-500">{workout.date}</p>
                       </div>
                     </div>
                     <svg
-                      className="w-5 h-5 text-zinc-600"
+                      className="h-5 w-5 text-zinc-600"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -537,7 +536,7 @@ export default function WorkoutHome() {
                       {workout.tags.map((tag, i) => (
                         <span
                           key={i}
-                          className="text-[10px] px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 font-medium"
+                          className="rounded-md bg-zinc-800 px-2 py-1 text-[10px] font-medium text-zinc-400"
                         >
                           {tag}
                         </span>
@@ -545,7 +544,7 @@ export default function WorkoutHome() {
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       {workout.isPr && (
-                        <span className="text-orange-500 bg-orange-500/10 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                        <span className="rounded bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-bold text-orange-500">
                           PR
                         </span>
                       )}

@@ -16,16 +16,16 @@ export function PageHeader({
   const router = useRouter();
 
   return (
-    <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4 -mx-4 -mt-6 mb-6">
-      <div className="flex items-center justify-between max-w-2xl mx-auto">
+    <header className="sticky top-0 z-40 -mx-4 -mt-6 mb-6 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
+      <div className="mx-auto flex max-w-2xl items-center justify-between">
         <div className="flex items-center gap-4">
           {showBack && (
             <button
               onClick={() => router.back()}
-              className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
+              className="-ml-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
             >
               <svg
-                className="w-6 h-6"
+                className="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

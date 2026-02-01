@@ -102,7 +102,7 @@ export function TemplatePickerModal({
             <p className="text-small text-muted">Нет сохранённых шаблонов</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-sm">
+          <div className="gap-sm flex flex-col">
             {templates.map((template) => (
               <button
                 key={template.id}
@@ -124,7 +124,7 @@ export function TemplatePickerModal({
                     >
                       {template.name}
                     </div>
-                    <div className="flex flex-wrap gap-xs">
+                    <div className="gap-xs flex flex-wrap">
                       {template.workout_template_exercises
                         ?.slice(0, 3)
                         .map((te, i) => (

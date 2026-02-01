@@ -10,7 +10,7 @@ import type {
   WorkoutExerciseLocal,
   ExerciseWithMuscleGroup,
   PerceivedDifficulty,
-} from "@/types/database.types";
+} from "@/types";
 
 interface WorkoutSetRow {
   id: string;
@@ -71,7 +71,7 @@ function parseAlternativeNote(note: string | null): {
 
 function buildAlternativeNote(
   alternativeExerciseId: string | null,
-  alternativeWeight: number | null,
+  alternativeWeight: number | null
 ): string | null {
   if (!alternativeExerciseId) {
     return null;
@@ -138,7 +138,7 @@ function NewWorkoutContent() {
                 set_index
               )
             )
-          `,
+          `
           )
           .eq("id", storedSessionId)
           .eq("user_id", user.id)
@@ -176,14 +176,14 @@ function NewWorkoutContent() {
                 `
                 *,
                 muscle_groups (*)
-              `,
+              `
               )
               .in("id", alternativeIds);
 
             (alternativeExercises || []).forEach((exercise) => {
               alternativeMap.set(
                 exercise.id,
-                exercise as ExerciseWithMuscleGroup,
+                exercise as ExerciseWithMuscleGroup
               );
             });
           }
@@ -217,7 +217,7 @@ function NewWorkoutContent() {
                   : null,
                 isSaved: true,
               };
-            },
+            }
           );
 
           if (!cancelled) {
@@ -267,7 +267,7 @@ function NewWorkoutContent() {
                 muscle_groups (*)
               )
             )
-          `,
+          `
           )
           .eq("id", templateId)
           .single();
@@ -289,7 +289,7 @@ function NewWorkoutContent() {
             .slice()
             .sort(
               (a: { order_index: number }, b: { order_index: number }) =>
-                a.order_index - b.order_index,
+                a.order_index - b.order_index
             );
 
           // Add each exercise from template to the workout
@@ -327,7 +327,7 @@ function NewWorkoutContent() {
                 perceived_difficulty,
                 workout_sessions!inner (user_id, performed_at, is_completed),
                 workout_sets (weight, reps, is_warmup)
-              `,
+              `
               )
               .eq("exercise_id", exercise.id)
               .eq("workout_sessions.user_id", user.id)
@@ -411,7 +411,7 @@ function NewWorkoutContent() {
           perceived_difficulty,
           workout_sessions!inner (user_id, performed_at),
           workout_sets (weight, reps, is_warmup)
-        `,
+        `
         )
         .eq("exercise_id", exerciseId)
         .eq("workout_sessions.user_id", user.id)
@@ -439,7 +439,7 @@ function NewWorkoutContent() {
           return prevWeight;
       }
     },
-    [supabase],
+    [supabase]
   );
 
   // Add exercise to workout
@@ -489,26 +489,24 @@ function NewWorkoutContent() {
       setExercises((prev) => [...prev, newExercise]);
       setShowExercisePicker(false);
     },
-    [sessionId, exercises.length, supabase, getRecommendedWeight],
+    [sessionId, exercises.length, supabase, getRecommendedWeight]
   );
 
   const handleUpdateSets = useCallback(
     (exerciseId: string, sets: WorkoutExerciseLocal["sets"]) => {
       setExercises((prev) =>
-        prev.map((ex) => (ex.id === exerciseId ? { ...ex, sets } : ex)),
+        prev.map((ex) => (ex.id === exerciseId ? { ...ex, sets } : ex))
       );
     },
-    [],
+    []
   );
 
   const handleUpdateDifficulty = useCallback(
     async (exerciseId: string, difficulty: PerceivedDifficulty) => {
       setExercises((prev) =>
         prev.map((ex) =>
-          ex.id === exerciseId
-            ? { ...ex, perceivedDifficulty: difficulty }
-            : ex,
-        ),
+          ex.id === exerciseId ? { ...ex, perceivedDifficulty: difficulty } : ex
+        )
       );
 
       await supabase
@@ -516,18 +514,18 @@ function NewWorkoutContent() {
         .update({ perceived_difficulty: difficulty })
         .eq("id", exerciseId);
     },
-    [supabase],
+    [supabase]
   );
 
   const saveAlternativeNote = useCallback(
     async (
       exerciseId: string,
       alternativeExerciseId: string | null,
-      alternativeWeight: number | null,
+      alternativeWeight: number | null
     ) => {
       const note = buildAlternativeNote(
         alternativeExerciseId,
-        alternativeWeight,
+        alternativeWeight
       );
 
       const { error } = await supabase
@@ -539,7 +537,7 @@ function NewWorkoutContent() {
         console.error("Error saving alternative exercise:", error);
       }
     },
-    [supabase],
+    [supabase]
   );
 
   const handleReplaceExercise = useCallback(
@@ -571,11 +569,11 @@ function NewWorkoutContent() {
                 alternativeExercise: null,
                 alternativeWeight: null,
               }
-            : ex,
-        ),
+            : ex
+        )
       );
     },
-    [supabase, getRecommendedWeight],
+    [supabase, getRecommendedWeight]
   );
 
   const handleSetAlternative = useCallback(
@@ -590,13 +588,13 @@ function NewWorkoutContent() {
                 alternativeExercise: newExercise,
                 alternativeWeight: recommendedWeight,
               }
-            : ex,
-        ),
+            : ex
+        )
       );
 
       await saveAlternativeNote(exerciseId, newExercise.id, recommendedWeight);
     },
-    [getRecommendedWeight, saveAlternativeNote],
+    [getRecommendedWeight, saveAlternativeNote]
   );
 
   const handleClearAlternative = useCallback(
@@ -605,24 +603,24 @@ function NewWorkoutContent() {
         prev.map((ex) =>
           ex.id === exerciseId
             ? { ...ex, alternativeExercise: null, alternativeWeight: null }
-            : ex,
-        ),
+            : ex
+        )
       );
 
       await saveAlternativeNote(exerciseId, null, null);
     },
-    [saveAlternativeNote],
+    [saveAlternativeNote]
   );
 
   const handleUpdateAlternativeWeight = useCallback(
     (exerciseId: string, weight: number | null) => {
       setExercises((prev) =>
         prev.map((ex) =>
-          ex.id === exerciseId ? { ...ex, alternativeWeight: weight } : ex,
-        ),
+          ex.id === exerciseId ? { ...ex, alternativeWeight: weight } : ex
+        )
       );
     },
-    [],
+    []
   );
 
   const handleSaveAlternativeWeight = useCallback(
@@ -633,7 +631,7 @@ function NewWorkoutContent() {
 
       await saveAlternativeNote(exerciseId, alternativeExerciseId, weight);
     },
-    [exercises, saveAlternativeNote],
+    [exercises, saveAlternativeNote]
   );
 
   const handleDeleteExercise = useCallback(
@@ -641,7 +639,7 @@ function NewWorkoutContent() {
       await supabase.from("workout_exercises").delete().eq("id", exerciseId);
       setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId));
     },
-    [supabase],
+    [supabase]
   );
 
   const handleSaveSet = useCallback(
@@ -651,7 +649,7 @@ function NewWorkoutContent() {
       weight: number,
       reps: number,
       isWarmup: boolean,
-      tempId?: string,
+      tempId?: string
     ) => {
       const { data, error } = await supabase
         .from("workout_sets")
@@ -678,14 +676,14 @@ function NewWorkoutContent() {
                 sets: ex.sets.map((s) =>
                   s.id === tempId || s.id === data.id
                     ? { ...s, id: data.id, isSaved: true }
-                    : s,
+                    : s
                 ),
               }
-            : ex,
-        ),
+            : ex
+        )
       );
     },
-    [supabase],
+    [supabase]
   );
 
   const handleFinishWorkout = async () => {
@@ -704,7 +702,7 @@ function NewWorkoutContent() {
             set.weight,
             set.reps,
             set.isWarmup,
-            set.id,
+            set.id
           );
         }
       }
@@ -726,8 +724,8 @@ function NewWorkoutContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
       </div>
     );
   }
@@ -735,15 +733,15 @@ function NewWorkoutContent() {
   return (
     <div className="min-h-screen bg-black pb-32">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+      <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
+        <div className="mx-auto flex max-w-2xl items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               href="/app/workouts"
-              className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
+              className="-ml-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
             >
               <svg
-                className="w-6 h-6"
+                className="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -763,13 +761,13 @@ function NewWorkoutContent() {
             <button
               onClick={handleFinishWorkout}
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-all disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 font-semibold text-white transition-all hover:bg-orange-600 disabled:opacity-50"
             >
               {saving ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (
                 <svg
-                  className="w-4 h-4"
+                  className="h-4 w-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -788,10 +786,10 @@ function NewWorkoutContent() {
         </div>
       </header>
 
-      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+      <main className="mx-auto max-w-2xl space-y-6 px-4 pt-6">
         {/* Workout Name */}
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider ml-1">
+          <label className="ml-1 text-xs font-semibold tracking-wider text-zinc-500 uppercase">
             Название
           </label>
           <input
@@ -799,7 +797,7 @@ function NewWorkoutContent() {
             value={workoutName}
             onChange={(e) => setWorkoutName(e.target.value)}
             placeholder="Название тренировки (опционально)"
-            className="w-full h-12 px-4 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-zinc-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+            className="h-12 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 text-white placeholder-zinc-600 transition-all outline-none focus:border-transparent focus:ring-2 focus:ring-orange-500"
           />
         </div>
 
@@ -832,7 +830,7 @@ function NewWorkoutContent() {
                   weight,
                   reps,
                   isWarmup,
-                  tempId,
+                  tempId
                 )
               }
             />
@@ -842,10 +840,10 @@ function NewWorkoutContent() {
         {/* Add Exercise Button */}
         <button
           onClick={() => setShowExercisePicker(true)}
-          className="w-full py-4 rounded-2xl border-2 border-dashed border-zinc-800 text-zinc-500 font-semibold hover:border-orange-500/50 hover:text-orange-400 hover:bg-orange-500/10 transition-all duration-200 flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-800 py-4 font-semibold text-zinc-500 transition-all duration-200 hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-400"
         >
           <svg
-            className="w-5 h-5"
+            className="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -876,8 +874,8 @@ export default function NewWorkoutPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-black flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="flex min-h-screen items-center justify-center bg-black">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
         </div>
       }
     >

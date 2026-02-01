@@ -15,7 +15,7 @@ export interface ExerciseStats {
  * Используется в активной тренировке для подсказок
  */
 export async function getExerciseStats(
-  exerciseId: string,
+  exerciseId: string
 ): Promise<ExerciseStats | null> {
   const supabase = createClient();
 
@@ -42,7 +42,7 @@ export async function getExerciseStats(
         weight,
         reps
       )
-    `,
+    `
     )
     .eq("exercise_id", exerciseId)
     .eq("workout_sessions.user_id", user.id)
@@ -103,7 +103,7 @@ export async function getExerciseStats(
  * Получает показатели для нескольких упражнений
  */
 export async function getMultipleExerciseStats(
-  exerciseIds: string[],
+  exerciseIds: string[]
 ): Promise<Map<string, ExerciseStats>> {
   const result = new Map<string, ExerciseStats>();
 
@@ -113,7 +113,7 @@ export async function getMultipleExerciseStats(
       if (stats) {
         result.set(id, stats);
       }
-    }),
+    })
   );
 
   return result;

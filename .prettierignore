@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Generated files
+*.lock
+package-lock.json
+
+# Misc
+.DS_Store
+*.log
+
+# Types (auto-generated)
+src/types/database.types.ts

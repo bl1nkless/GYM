@@ -17,36 +17,36 @@ export default function ExerciseCard({
   onRemove,
 }: ExerciseCardProps) {
   return (
-    <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
       {/* Main Row */}
       <div
-        className="p-4 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+        className="cursor-pointer p-4 transition-colors hover:bg-zinc-800/50"
         onClick={onToggleExpand}
       >
         {/* Top Line - Name and Weight */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <div
-              className={`transition-transform duration-200 flex-shrink-0 ${isExpanded ? "rotate-180" : ""}`}
+              className={`flex-shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
             >
-              <ChevronDown className="w-4 h-4 text-zinc-500" />
+              <ChevronDown className="h-4 w-4 text-zinc-500" />
             </div>
-            <h3 className="font-medium text-white truncate">
+            <h3 className="truncate font-medium text-white">
               {data.exerciseName}
             </h3>
           </div>
 
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center gap-3">
             {/* Рабочий вес */}
-            <p className="text-lg font-bold text-white whitespace-nowrap">
+            <p className="text-lg font-bold whitespace-nowrap text-white">
               {data.lastWeight}
-              <span className="text-sm text-zinc-500 ml-1">кг</span>
+              <span className="ml-1 text-sm text-zinc-500">кг</span>
             </p>
 
             {/* Рекорд */}
             {data.maxWeight > data.lastWeight && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                <Trophy className="w-3.5 h-3.5 text-orange-400" />
+              <div className="flex items-center gap-1 rounded-lg border border-orange-500/20 bg-orange-500/10 px-2 py-1">
+                <Trophy className="h-3.5 w-3.5 text-orange-400" />
                 <span className="text-sm font-medium text-orange-400">
                   {data.maxWeight}
                 </span>
@@ -58,15 +58,15 @@ export default function ExerciseCard({
                 e.stopPropagation();
                 onRemove();
               }}
-              className="p-1.5 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+              className="rounded-lg p-1.5 text-zinc-600 transition-colors hover:bg-red-500/10 hover:text-red-400"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
         {/* Bottom Line - Date */}
-        <p className="text-xs text-zinc-500 mt-1 ml-7">
+        <p className="mt-1 ml-7 text-xs text-zinc-500">
           {new Date(data.lastDate).toLocaleDateString("ru-RU", {
             day: "numeric",
             month: "short",
@@ -100,9 +100,9 @@ function ExerciseHistory({
   const reversedHistory = [...history].reverse();
 
   return (
-    <div className="px-4 pb-4 pt-0">
+    <div className="px-4 pt-0 pb-4">
       <div className="border-t border-zinc-800 pt-3">
-        <p className="text-xs text-zinc-500 mb-3 uppercase tracking-wide">
+        <p className="mb-3 text-xs tracking-wide text-zinc-500 uppercase">
           История изменений
         </p>
         <div className="space-y-2">
@@ -114,7 +114,7 @@ function ExerciseHistory({
             return (
               <div
                 key={entry.date}
-                className={`flex items-center justify-between py-2 px-3 rounded-lg ${
+                className={`flex items-center justify-between rounded-lg px-3 py-2 ${
                   index === 0 ? "bg-zinc-800/50" : ""
                 }`}
               >
@@ -126,9 +126,9 @@ function ExerciseHistory({
                     })}
                   </span>
                   {isRecord && (
-                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500/20 rounded">
-                      <Trophy className="w-3 h-3 text-orange-400" />
-                      <span className="text-[10px] text-orange-400 font-medium">
+                    <div className="flex items-center gap-1 rounded bg-orange-500/20 px-1.5 py-0.5">
+                      <Trophy className="h-3 w-3 text-orange-400" />
+                      <span className="text-[10px] font-medium text-orange-400">
                         PR
                       </span>
                     </div>
@@ -140,14 +140,14 @@ function ExerciseHistory({
                   </span>
                   {diff !== 0 && (
                     <span
-                      className={`text-xs flex items-center gap-0.5 ${
+                      className={`flex items-center gap-0.5 text-xs ${
                         diff > 0 ? "text-green-400" : "text-red-400"
                       }`}
                     >
                       {diff > 0 ? (
-                        <TrendingUp className="w-3 h-3" />
+                        <TrendingUp className="h-3 w-3" />
                       ) : (
-                        <TrendingDown className="w-3 h-3" />
+                        <TrendingDown className="h-3 w-3" />
                       )}
                       {Math.abs(diff)}
                     </span>

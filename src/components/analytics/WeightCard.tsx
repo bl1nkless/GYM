@@ -27,20 +27,20 @@ export default function WeightCard({
           Math.abs(
             ((currentWeight - weightHistory[0].weight) /
               (goalWeight - weightHistory[0].weight)) *
-              100,
-          ),
+              100
+          )
         )
       : 0;
 
   return (
     <div
-      className="bg-gradient-to-br from-zinc-900 to-zinc-900/50 rounded-2xl p-5 border border-zinc-800 cursor-pointer hover:border-zinc-700 transition-all"
+      className="cursor-pointer rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 to-zinc-900/50 p-5 transition-all hover:border-zinc-700"
       onClick={onClick}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-            <Scale className="w-5 h-5 text-blue-400" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/20">
+            <Scale className="h-5 w-5 text-blue-400" />
           </div>
           <div>
             <h3 className="font-semibold text-white">Вес тела</h3>
@@ -49,7 +49,7 @@ export default function WeightCard({
             </p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-zinc-600" />
+        <ChevronRight className="h-5 w-5 text-zinc-600" />
       </div>
 
       {currentWeight ? (
@@ -58,10 +58,10 @@ export default function WeightCard({
             <span className="text-4xl font-bold text-white">
               {currentWeight}
             </span>
-            <span className="text-lg text-zinc-500 pb-1">кг</span>
+            <span className="pb-1 text-lg text-zinc-500">кг</span>
             {weightDiff !== null && (
               <div
-                className={`flex items-center gap-1 ml-auto px-2 py-1 rounded-lg ${
+                className={`ml-auto flex items-center gap-1 rounded-lg px-2 py-1 ${
                   isGaining
                     ? weightDiff < 0
                       ? "bg-green-500/20 text-green-400"
@@ -72,9 +72,9 @@ export default function WeightCard({
                 }`}
               >
                 {weightDiff > 0 ? (
-                  <TrendingUp className="w-3 h-3" />
+                  <TrendingUp className="h-3 w-3" />
                 ) : (
-                  <TrendingDown className="w-3 h-3" />
+                  <TrendingDown className="h-3 w-3" />
                 )}
                 <span className="text-xs font-medium">
                   {Math.abs(weightDiff).toFixed(1)} кг до цели
@@ -91,9 +91,9 @@ export default function WeightCard({
                   {isNaN(progressPercent) ? 0 : progressPercent.toFixed(0)}%
                 </span>
               </div>
-              <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500"
                   style={{
                     width: `${isNaN(progressPercent) ? 0 : progressPercent}%`,
                   }}
@@ -103,8 +103,8 @@ export default function WeightCard({
           )}
         </div>
       ) : (
-        <div className="text-center py-4">
-          <p className="text-zinc-500 text-sm">
+        <div className="py-4 text-center">
+          <p className="text-sm text-zinc-500">
             Добавь свой вес для отслеживания прогресса
           </p>
         </div>

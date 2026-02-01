@@ -23,7 +23,7 @@ interface TelegramInitData {
  */
 export function validateTelegramInitData(
   initData: string,
-  botToken: string,
+  botToken: string
 ): TelegramInitData | null {
   try {
     const params = new URLSearchParams(initData);
@@ -92,7 +92,7 @@ export function getTelegramEmail(telegramId: number): string {
  */
 export function getTelegramPassword(
   telegramId: number,
-  secret: string,
+  secret: string
 ): string {
   return crypto
     .createHmac("sha256", secret)

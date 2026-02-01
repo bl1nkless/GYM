@@ -6,10 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "gen:types": "npx supabase gen types typescript --project-id lwocsqqqrhmofpozacbp | Out-File -FilePath src/types/database.types.ts -Encoding utf8"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -31,8 +36,12 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.8",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
     "jsdom": "^27.4.0",
     "msw": "^2.12.7",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18"

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { ExerciseWithMuscleGroup } from "@/types/database.types";
+import type { ExerciseWithMuscleGroup } from "@/types";
 import { ChevronRight, Search, X } from "lucide-react";
 
 interface ExerciseSwapModalProps {
@@ -132,7 +132,7 @@ export function ExerciseSwapModal({
             <div className="spinner" />
           </div>
         ) : filtered.length > 0 ? (
-          <div className="flex flex-col gap-sm">
+          <div className="gap-sm flex flex-col">
             {filtered.map((exercise) => (
               <button
                 key={exercise.id}

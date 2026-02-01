@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ExercisePickerModal } from "@/components/workouts/ExercisePickerModal";
-import type { ExerciseWithMuscleGroup } from "@/types/database.types";
+import type { ExerciseWithMuscleGroup } from "@/types";
 
 // --- ТИПЫ (Локальные для макета) ---
 interface Exercise {
@@ -47,20 +47,20 @@ function SwapExerciseModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-md bg-zinc-900 sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col animate-in slide-in-from-bottom duration-200 ring-1 ring-white/10">
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+      <div className="animate-in slide-in-from-bottom relative flex max-h-[85vh] w-full max-w-md flex-col rounded-t-2xl bg-zinc-900 shadow-2xl ring-1 ring-white/10 duration-200 sm:rounded-2xl">
+        <div className="flex items-center justify-between border-b border-zinc-800 p-4">
           <h3 className="text-lg font-bold text-white">Альтернативы</h3>
           <button
             onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-white bg-zinc-800 rounded-full transition-colors"
+            className="rounded-full bg-zinc-800 p-2 text-zinc-400 transition-colors hover:text-white"
           >
             <svg
-              className="w-5 h-5"
+              className="h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -75,10 +75,10 @@ function SwapExerciseModal({
           </button>
         </div>
 
-        <div className="bg-blue-900/20 px-4 py-3 border-b border-blue-900/30">
-          <p className="text-sm text-blue-300 flex items-center gap-2">
+        <div className="border-b border-blue-900/30 bg-blue-900/20 px-4 py-3">
+          <p className="flex items-center gap-2 text-sm text-blue-300">
             <svg
-              className="w-4 h-4 shrink-0"
+              className="h-4 w-4 shrink-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -97,7 +97,7 @@ function SwapExerciseModal({
           </p>
         </div>
 
-        <div className="overflow-y-auto p-2 space-y-1">
+        <div className="space-y-1 overflow-y-auto p-2">
           {MOCK_ALTERNATIVES.map((alt) => (
             <button
               key={alt.id}
@@ -105,13 +105,13 @@ function SwapExerciseModal({
                 onSelect(alt);
                 onClose();
               }}
-              className="w-full text-left p-4 hover:bg-zinc-800 rounded-xl transition-colors group flex items-center justify-between border border-transparent hover:border-zinc-700"
+              className="group flex w-full items-center justify-between rounded-xl border border-transparent p-4 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-800"
             >
-              <span className="font-medium text-zinc-200 group-hover:text-blue-400 transition-colors">
+              <span className="font-medium text-zinc-200 transition-colors group-hover:text-blue-400">
                 {alt.name}
               </span>
               <svg
-                className="w-5 h-5 text-zinc-600 group-hover:text-blue-500"
+                className="h-5 w-5 text-zinc-600 group-hover:text-blue-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -151,28 +151,28 @@ function ActiveExerciseBlock({
   const toggleSetCompletion = (index: number) => {
     setSets((prev) =>
       prev.map((s, i) =>
-        i === index ? { ...s, isCompleted: !s.isCompleted } : s,
-      ),
+        i === index ? { ...s, isCompleted: !s.isCompleted } : s
+      )
     );
   };
 
   const updateSet = (index: number, field: keyof LocalSet, value: string) => {
     setSets((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
+      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
     );
   };
 
   return (
-    <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-4 border-b border-zinc-800 flex justify-between items-start">
+    <div className="mb-6 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-lg">
+      <div className="flex items-start justify-between border-b border-zinc-800 p-4">
         <div>
-          <h3 className="text-lg font-bold text-white leading-tight">
+          <h3 className="text-lg leading-tight font-bold text-white">
             {exercise.name}
           </h3>
           <div className="mt-1.5 flex items-center gap-2">
-            <div className="px-2 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5 bg-zinc-800 text-zinc-400 border border-zinc-700">
+            <div className="flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-400">
               <svg
-                className="w-3 h-3"
+                className="h-3 w-3"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -186,21 +186,21 @@ function ActiveExerciseBlock({
               </svg>
               <span>
                 Рабочий вес:{" "}
-                <span className="text-white font-semibold">
+                <span className="font-semibold text-white">
                   {lastWorkingWeight} кг
                 </span>
               </span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1 -mr-2">
+        <div className="-mr-2 flex items-center gap-1">
           <button
             onClick={() => setIsSwapModalOpen(true)}
-            className="p-2 text-zinc-500 hover:text-blue-400 hover:bg-zinc-800 rounded-xl transition-colors"
+            className="rounded-xl p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-blue-400"
             title="Заменить упражнение"
           >
             <svg
-              className="w-5 h-5"
+              className="h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -215,11 +215,11 @@ function ActiveExerciseBlock({
           </button>
           <button
             onClick={onDelete}
-            className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+            className="rounded-xl p-2 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
             title="Удалить упражнение"
           >
             <svg
-              className="w-5 h-5"
+              className="h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -236,7 +236,7 @@ function ActiveExerciseBlock({
       </div>
 
       <div className="p-2">
-        <div className="grid grid-cols-[30px_1fr_1fr_40px] gap-3 px-2 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">
+        <div className="grid grid-cols-[30px_1fr_1fr_40px] gap-3 px-2 py-2 text-center text-xs font-semibold tracking-wider text-zinc-500 uppercase">
           <span>Сет</span>
           <span>КГ</span>
           <span>Повт</span>
@@ -247,16 +247,14 @@ function ActiveExerciseBlock({
           {sets.map((set, index) => (
             <div
               key={set.id}
-              className={`grid grid-cols-[30px_1fr_1fr_40px] gap-3 items-center p-2 rounded-xl transition-colors duration-200
-                ${set.isCompleted ? "bg-green-900/20" : "bg-transparent"}`}
+              className={`grid grid-cols-[30px_1fr_1fr_40px] items-center gap-3 rounded-xl p-2 transition-colors duration-200 ${set.isCompleted ? "bg-green-900/20" : "bg-transparent"}`}
             >
               <div className="flex justify-center">
                 <span
-                  className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold
-                  ${
+                  className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                     set.isCompleted
-                      ? "bg-green-900 text-green-400 border border-green-800"
-                      : "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                      ? "border border-green-800 bg-green-900 text-green-400"
+                      : "border border-zinc-700 bg-zinc-800 text-zinc-500"
                   }`}
                 >
                   {index + 1}
@@ -268,12 +266,11 @@ function ActiveExerciseBlock({
                 placeholder={String(lastWorkingWeight)}
                 value={set.weight}
                 onChange={(e) => updateSet(index, "weight", e.target.value)}
-                className={`w-full h-10 text-center font-medium text-lg rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-zinc-600
-                  ${
-                    set.isCompleted
-                      ? "bg-transparent border-green-800/50 text-green-400"
-                      : "bg-zinc-800 border-zinc-700 text-white"
-                  }`}
+                className={`h-10 w-full rounded-lg border text-center text-lg font-medium placeholder-zinc-600 transition-all outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                  set.isCompleted
+                    ? "border-green-800/50 bg-transparent text-green-400"
+                    : "border-zinc-700 bg-zinc-800 text-white"
+                }`}
               />
 
               <input
@@ -281,25 +278,23 @@ function ActiveExerciseBlock({
                 placeholder="-"
                 value={set.reps}
                 onChange={(e) => updateSet(index, "reps", e.target.value)}
-                className={`w-full h-10 text-center font-medium text-lg rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-zinc-600
-                  ${
-                    set.isCompleted
-                      ? "bg-transparent border-green-800/50 text-green-400"
-                      : "bg-zinc-800 border-zinc-700 text-white"
-                  }`}
+                className={`h-10 w-full rounded-lg border text-center text-lg font-medium placeholder-zinc-600 transition-all outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                  set.isCompleted
+                    ? "border-green-800/50 bg-transparent text-green-400"
+                    : "border-zinc-700 bg-zinc-800 text-white"
+                }`}
               />
 
               <button
                 onClick={() => toggleSetCompletion(index)}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all duration-200
-                  ${
-                    set.isCompleted
-                      ? "bg-green-600 border-green-500 text-white shadow-[0_0_10px_rgba(22,163,74,0.3)]"
-                      : "bg-zinc-800 border-zinc-700 text-transparent hover:border-zinc-500"
-                  }`}
+                className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 ${
+                  set.isCompleted
+                    ? "border-green-500 bg-green-600 text-white shadow-[0_0_10px_rgba(22,163,74,0.3)]"
+                    : "border-zinc-700 bg-zinc-800 text-transparent hover:border-zinc-500"
+                }`}
               >
                 <svg
-                  className="w-5 h-5"
+                  className="h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -328,10 +323,10 @@ function ActiveExerciseBlock({
               },
             ])
           }
-          className="w-full mt-3 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-zinc-500 bg-zinc-800/50 hover:bg-zinc-800 hover:text-zinc-300 rounded-xl transition-colors border border-dashed border-zinc-700"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 bg-zinc-800/50 py-3 text-sm font-semibold text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
         >
           <svg
-            className="w-4 h-4"
+            className="h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -379,8 +374,8 @@ export default function ActiveWorkoutPage() {
   const handleReplaceExercise = (exerciseId: string, newExercise: Exercise) => {
     setExercises((prev) =>
       prev.map((ex) =>
-        ex.id === exerciseId ? { ...newExercise, id: ex.id } : ex,
-      ),
+        ex.id === exerciseId ? { ...newExercise, id: ex.id } : ex
+      )
     );
   };
 
@@ -408,14 +403,14 @@ export default function ActiveWorkoutPage() {
 
   return (
     <div className="min-h-screen bg-black pb-32">
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+      <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
+        <div className="mx-auto flex max-w-2xl items-center justify-between">
           <Link
             href="/app/workouts"
-            className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
+            className="-ml-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
           >
             <svg
-              className="w-6 h-6"
+              className="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -429,8 +424,8 @@ export default function ActiveWorkoutPage() {
             </svg>
           </Link>
 
-          <div className="flex items-center gap-2 px-3 py-1 bg-zinc-900 rounded-full border border-zinc-800">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+          <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
             <span className="font-mono text-sm font-medium text-zinc-300">
               {formatTime(duration)}
             </span>
@@ -438,10 +433,10 @@ export default function ActiveWorkoutPage() {
 
           <button
             onClick={handleCloseWorkout}
-            className="p-2 -mr-2 text-zinc-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-500/10"
+            className="-mr-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-500"
           >
             <svg
-              className="w-6 h-6"
+              className="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -457,16 +452,16 @@ export default function ActiveWorkoutPage() {
         </div>
       </header>
 
-      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+      <main className="mx-auto max-w-2xl space-y-6 px-4 pt-6">
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider ml-1">
+          <label className="ml-1 text-xs font-semibold tracking-wider text-zinc-500 uppercase">
             Название
           </label>
           <input
             type="text"
             value={workoutName}
             onChange={(e) => setWorkoutName(e.target.value)}
-            className="w-full text-3xl font-extrabold text-white bg-transparent border-none p-0 focus:ring-0 placeholder-zinc-700"
+            className="w-full border-none bg-transparent p-0 text-3xl font-extrabold text-white placeholder-zinc-700 focus:ring-0"
             placeholder="Название тренировки"
           />
         </div>
@@ -486,11 +481,10 @@ export default function ActiveWorkoutPage() {
 
         <button
           onClick={() => setShowExercisePicker(true)}
-          className="w-full py-4 rounded-2xl border-2 border-dashed border-zinc-800 text-zinc-500 font-semibold 
-                     hover:border-blue-500/50 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-200 flex items-center justify-center gap-2 group"
+          className="group flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-800 py-4 font-semibold text-zinc-500 transition-all duration-200 hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-400"
         >
           <svg
-            className="w-6 h-6 group-hover:scale-110 transition-transform"
+            className="h-6 w-6 transition-transform group-hover:scale-110"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -506,12 +500,12 @@ export default function ActiveWorkoutPage() {
         </button>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/90 backdrop-blur-lg border-t border-zinc-800 pb-8 safe-area-bottom z-50">
-        <div className="max-w-2xl mx-auto flex gap-3">
-          <button className="flex-1 py-3.5 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-colors">
+      <div className="safe-area-bottom fixed right-0 bottom-0 left-0 z-50 border-t border-zinc-800 bg-black/90 p-4 pb-8 backdrop-blur-lg">
+        <div className="mx-auto flex max-w-2xl gap-3">
+          <button className="flex-1 rounded-xl bg-zinc-800 py-3.5 font-bold text-white transition-colors hover:bg-zinc-700">
             Пауза
           </button>
-          <button className="flex-[2] py-3.5 bg-white text-black font-bold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:bg-gray-100 transition-all active:scale-[0.98]">
+          <button className="flex-[2] rounded-xl bg-white py-3.5 font-bold text-black shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all hover:bg-gray-100 active:scale-[0.98]">
             Завершить тренировку
           </button>
         </div>

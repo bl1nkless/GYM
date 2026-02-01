@@ -81,14 +81,14 @@ export default function TemplatesPage() {
   return (
     <div className="min-h-screen bg-black pb-32">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
-        <div className="flex items-center gap-4 max-w-2xl mx-auto">
+      <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
+        <div className="mx-auto flex max-w-2xl items-center gap-4">
           <Link
             href="/app/profile"
-            className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
+            className="-ml-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
           >
             <svg
-              className="w-6 h-6"
+              className="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -105,20 +105,20 @@ export default function TemplatesPage() {
         </div>
       </header>
 
-      <main className="px-4 pt-6 max-w-2xl mx-auto">
+      <main className="mx-auto max-w-2xl px-4 pt-6">
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-24 bg-zinc-900 rounded-2xl animate-pulse border border-zinc-800"
+                className="h-24 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900"
               />
             ))}
           </div>
         ) : templates.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="py-16 text-center">
             <svg
-              className="w-16 h-16 mx-auto mb-4 text-zinc-700"
+              className="mx-auto mb-4 h-16 w-16 text-zinc-700"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -130,7 +130,7 @@ export default function TemplatesPage() {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <h2 className="text-lg font-semibold text-zinc-400 mb-2">
+            <h2 className="mb-2 text-lg font-semibold text-zinc-400">
               Нет шаблонов
             </h2>
             <p className="text-sm text-zinc-600">
@@ -143,20 +143,20 @@ export default function TemplatesPage() {
             {templates.map((template) => (
               <div
                 key={template.id}
-                className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800"
+                className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4"
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="mb-3 flex items-start justify-between">
                   <h3 className="font-semibold text-white">{template.name}</h3>
                   <button
                     onClick={() => handleDelete(template.id)}
                     disabled={deletingId === template.id}
-                    className="p-2 -mr-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors disabled:opacity-50"
+                    className="-mr-2 rounded-xl p-2 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
                   >
                     {deletingId === template.id ? (
-                      <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
                     ) : (
                       <svg
-                        className="w-4 h-4"
+                        className="h-4 w-4"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -172,19 +172,19 @@ export default function TemplatesPage() {
                   </button>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="mb-3 flex flex-wrap gap-2">
                   {template.workout_template_exercises
                     ?.slice(0, 5)
                     .map((te) => (
                       <span
                         key={te.id}
-                        className="text-xs px-2 py-1 rounded-md bg-zinc-800 text-zinc-400"
+                        className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-400"
                       >
                         {te.exercises?.name}
                       </span>
                     ))}
                   {(template.workout_template_exercises?.length || 0) > 5 && (
-                    <span className="text-xs px-2 py-1 rounded-md bg-zinc-800 text-zinc-400">
+                    <span className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-400">
                       +{(template.workout_template_exercises?.length || 0) - 5}
                     </span>
                   )}

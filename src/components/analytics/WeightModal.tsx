@@ -30,7 +30,7 @@ export default function WeightModal({
         onClose();
       }
     },
-    [onClose, isPending],
+    [onClose, isPending]
   );
 
   // Focus trap и регистрация обработчика Esc
@@ -66,11 +66,11 @@ export default function WeightModal({
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-sm bg-zinc-900 rounded-3xl border border-zinc-700 shadow-2xl p-6 space-y-6"
+        className="relative w-full max-w-sm space-y-6 rounded-3xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl"
       >
         <h2
           id="weight-modal-title"
-          className="text-xl font-bold text-white text-center"
+          className="text-center text-xl font-bold text-white"
         >
           Обновить вес
         </h2>
@@ -81,7 +81,7 @@ export default function WeightModal({
             Текущий вес
           </label>
           <div
-            className="flex items-center justify-center gap-4 bg-zinc-800 rounded-2xl p-4"
+            className="flex items-center justify-center gap-4 rounded-2xl bg-zinc-800 p-4"
             role="group"
             aria-labelledby="current-weight-label"
           >
@@ -89,24 +89,24 @@ export default function WeightModal({
               ref={firstButtonRef}
               type="button"
               onClick={() => setWeight((w) => Math.max(30, w - 0.5))}
-              className="w-10 h-10 rounded-full bg-zinc-700 hover:bg-zinc-600 flex items-center justify-center transition-colors disabled:opacity-50"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-700 transition-colors hover:bg-zinc-600 disabled:opacity-50"
               disabled={isPending}
               aria-label="Уменьшить вес"
             >
-              <Minus className="w-5 h-5 text-white" />
+              <Minus className="h-5 w-5 text-white" />
             </button>
             <div className="text-center" aria-live="polite">
               <span className="text-4xl font-bold text-white">{weight}</span>
-              <span className="text-lg text-zinc-500 ml-1">кг</span>
+              <span className="ml-1 text-lg text-zinc-500">кг</span>
             </div>
             <button
               type="button"
               onClick={() => setWeight((w) => Math.min(200, w + 0.5))}
-              className="w-10 h-10 rounded-full bg-zinc-700 hover:bg-zinc-600 flex items-center justify-center transition-colors disabled:opacity-50"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-700 transition-colors hover:bg-zinc-600 disabled:opacity-50"
               disabled={isPending}
               aria-label="Увеличить вес"
             >
-              <Plus className="w-5 h-5 text-white" />
+              <Plus className="h-5 w-5 text-white" />
             </button>
           </div>
         </div>
@@ -117,31 +117,31 @@ export default function WeightModal({
             Цель по весу
           </label>
           <div
-            className="flex items-center justify-center gap-4 bg-zinc-800 rounded-2xl p-4"
+            className="flex items-center justify-center gap-4 rounded-2xl bg-zinc-800 p-4"
             role="group"
             aria-labelledby="goal-weight-label"
           >
             <button
               type="button"
               onClick={() => setGoal((g) => Math.max(30, g - 0.5))}
-              className="w-10 h-10 rounded-full bg-zinc-700 hover:bg-zinc-600 flex items-center justify-center transition-colors disabled:opacity-50"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-700 transition-colors hover:bg-zinc-600 disabled:opacity-50"
               disabled={isPending}
               aria-label="Уменьшить цель"
             >
-              <Minus className="w-5 h-5 text-white" />
+              <Minus className="h-5 w-5 text-white" />
             </button>
             <div className="text-center" aria-live="polite">
               <span className="text-4xl font-bold text-white">{goal}</span>
-              <span className="text-lg text-zinc-500 ml-1">кг</span>
+              <span className="ml-1 text-lg text-zinc-500">кг</span>
             </div>
             <button
               type="button"
               onClick={() => setGoal((g) => Math.min(200, g + 0.5))}
-              className="w-10 h-10 rounded-full bg-zinc-700 hover:bg-zinc-600 flex items-center justify-center transition-colors disabled:opacity-50"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-700 transition-colors hover:bg-zinc-600 disabled:opacity-50"
               disabled={isPending}
               aria-label="Увеличить цель"
             >
-              <Plus className="w-5 h-5 text-white" />
+              <Plus className="h-5 w-5 text-white" />
             </button>
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function WeightModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl bg-zinc-800 text-zinc-400 font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50"
+            className="flex-1 rounded-xl bg-zinc-800 py-3 font-medium text-zinc-400 transition-colors hover:bg-zinc-700 disabled:opacity-50"
             disabled={isPending}
           >
             Отмена
@@ -159,12 +159,12 @@ export default function WeightModal({
           <button
             type="button"
             onClick={() => onSave(weight, goal)}
-            className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 font-medium text-white transition-colors hover:bg-orange-400 disabled:opacity-50"
             disabled={isPending}
           >
             {isPending ? (
               <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 Сохранение...
               </>
             ) : (

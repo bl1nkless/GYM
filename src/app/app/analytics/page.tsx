@@ -25,7 +25,7 @@ export default async function AnalyticsPage() {
       exercise_id,
       exercises (id, name, muscle_groups (name)),
       workout_sessions!inner (user_id)
-    `,
+    `
     )
     .eq("workout_sessions.user_id", user.id);
 

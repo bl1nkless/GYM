@@ -33,7 +33,7 @@ export type ExerciseHistory = {
  * @returns Массив ExerciseHistory, отсортированный по дате
  */
 export function buildExerciseStats(
-  rows: WorkoutExerciseRow[],
+  rows: WorkoutExerciseRow[]
 ): ExerciseHistory[] {
   const map = new Map<string, ExerciseHistory>();
 
@@ -46,7 +46,7 @@ export function buildExerciseStats(
     // Находим максимальный вес в данной тренировке
     const maxSet = (r.workout_sets ?? []).reduce(
       (m, s) => Math.max(m, s?.weight ?? 0),
-      0,
+      0
     );
 
     // Получаем или создаём запись в map

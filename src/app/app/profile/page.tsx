@@ -49,8 +49,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
       </div>
     );
   }
@@ -58,18 +58,18 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-black pb-32">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
-        <div className="max-w-2xl mx-auto">
+      <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
+        <div className="mx-auto max-w-2xl">
           <h1 className="text-2xl font-bold text-white">Профиль</h1>
         </div>
       </header>
 
-      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+      <main className="mx-auto max-w-2xl space-y-6 px-4 pt-6">
         {/* Avatar & Info Card */}
-        <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800 text-center">
-          <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-4">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-800">
             <svg
-              className="w-10 h-10 text-zinc-500"
+              className="h-10 w-10 text-zinc-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -86,7 +86,7 @@ export default function ProfilePage() {
           <div className="space-y-2">
             <div className="flex items-center justify-center gap-2 text-white">
               <svg
-                className="w-4 h-4 text-zinc-500"
+                className="h-4 w-4 text-zinc-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -102,9 +102,9 @@ export default function ProfilePage() {
             </div>
 
             {profile?.createdAt && (
-              <div className="flex items-center justify-center gap-2 text-zinc-500 text-xs">
+              <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
                 <svg
-                  className="w-3.5 h-3.5"
+                  className="h-3.5 w-3.5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -133,11 +133,11 @@ export default function ProfilePage() {
         <div className="space-y-3">
           <Link
             href="/app/templates"
-            className="flex items-center justify-between bg-zinc-900 rounded-2xl p-4 border border-zinc-800 hover:border-zinc-700 transition-colors"
+            className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-zinc-700"
           >
             <div className="flex items-center gap-3">
               <svg
-                className="w-5 h-5 text-orange-500"
+                className="h-5 w-5 text-orange-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -149,10 +149,10 @@ export default function ProfilePage() {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span className="text-white font-medium">Мои шаблоны</span>
+              <span className="font-medium text-white">Мои шаблоны</span>
             </div>
             <svg
-              className="w-5 h-5 text-zinc-600"
+              className="h-5 w-5 text-zinc-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -169,13 +169,13 @@ export default function ProfilePage() {
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-semibold py-4 rounded-2xl transition-all disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 py-4 font-semibold text-red-400 transition-all hover:bg-red-500/20 disabled:opacity-50"
           >
             {loggingOut ? (
-              <div className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
             ) : (
               <svg
-                className="w-5 h-5"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -193,7 +193,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Version */}
-        <div className="text-center text-xs text-zinc-600 pt-8">
+        <div className="pt-8 text-center text-xs text-zinc-600">
           GymTrack v0.1.0 (MVP)
         </div>
       </main>

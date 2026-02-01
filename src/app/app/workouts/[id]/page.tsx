@@ -172,8 +172,8 @@ export default function WorkoutDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
       </div>
     );
   }
@@ -188,15 +188,15 @@ export default function WorkoutDetailsPage() {
   return (
     <div className="min-h-screen bg-black pb-32">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+      <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
+        <div className="mx-auto flex max-w-2xl items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               href="/app/workouts"
-              className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-800"
+              className="-ml-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
             >
               <svg
-                className="w-6 h-6"
+                className="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -217,11 +217,11 @@ export default function WorkoutDetailsPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowTemplateModal(true)}
-              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors"
+              className="rounded-xl p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
               title="Сохранить как шаблон"
             >
               <svg
-                className="w-5 h-5"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -237,14 +237,14 @@ export default function WorkoutDetailsPage() {
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors disabled:opacity-50"
+              className="rounded-xl p-2 text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
               title="Удалить"
             >
               {deleting ? (
-                <div className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
               ) : (
                 <svg
-                  className="w-5 h-5"
+                  className="h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -262,13 +262,13 @@ export default function WorkoutDetailsPage() {
         </div>
       </header>
 
-      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+      <main className="mx-auto max-w-2xl space-y-6 px-4 pt-6">
         {/* Meta Info Card */}
-        <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800">
-          <div className="flex items-center gap-4 text-sm text-zinc-400 mb-2">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+          <div className="mb-2 flex items-center gap-4 text-sm text-zinc-400">
             <div className="flex items-center gap-2">
               <svg
-                className="w-4 h-4"
+                className="h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -284,7 +284,7 @@ export default function WorkoutDetailsPage() {
             </div>
             <div className="flex items-center gap-2">
               <svg
-                className="w-4 h-4"
+                className="h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -316,9 +316,9 @@ export default function WorkoutDetailsPage() {
             return (
               <div
                 key={we.id}
-                className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800"
+                className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4"
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="mb-3 flex items-start justify-between">
                   <div>
                     <h3 className="font-semibold text-white">
                       {we.exercises?.name}
@@ -329,7 +329,7 @@ export default function WorkoutDetailsPage() {
                   </div>
                   {we.perceived_difficulty && (
                     <span
-                      className={`text-xs px-2 py-1 rounded-md font-medium ${difficulty.class}`}
+                      className={`rounded-md px-2 py-1 text-xs font-medium ${difficulty.class}`}
                     >
                       {difficulty.text}
                     </span>
@@ -338,14 +338,14 @@ export default function WorkoutDetailsPage() {
 
                 {warmupSets.length > 0 && (
                   <div className="mb-3">
-                    <span className="text-xs text-zinc-500 mb-1 block">
+                    <span className="mb-1 block text-xs text-zinc-500">
                       Разминка:
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {warmupSets.map((set, i) => (
                         <span
                           key={i}
-                          className="text-xs px-2 py-1 rounded-md bg-zinc-800 text-zinc-400"
+                          className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-400"
                         >
                           {set.weight}кг × {set.reps}
                         </span>
@@ -356,14 +356,14 @@ export default function WorkoutDetailsPage() {
 
                 {workingSets.length > 0 && (
                   <div>
-                    <span className="text-xs text-zinc-500 mb-1 block">
+                    <span className="mb-1 block text-xs text-zinc-500">
                       Рабочие подходы:
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {workingSets.map((set, i) => (
                         <span
                           key={i}
-                          className="text-xs px-2 py-1 rounded-md bg-orange-500/20 text-orange-400 font-medium"
+                          className="rounded-md bg-orange-500/20 px-2 py-1 text-xs font-medium text-orange-400"
                         >
                           {set.weight}кг × {set.reps}
                         </span>
@@ -379,18 +379,18 @@ export default function WorkoutDetailsPage() {
 
       {/* Save as Template Modal */}
       {showTemplateModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowTemplateModal(false)}
           />
-          <div className="relative w-full max-w-md bg-zinc-900 sm:rounded-2xl rounded-t-2xl shadow-2xl p-6 ring-1 ring-white/10">
-            <h2 className="text-lg font-bold text-white mb-6">
+          <div className="relative w-full max-w-md rounded-t-2xl bg-zinc-900 p-6 shadow-2xl ring-1 ring-white/10 sm:rounded-2xl">
+            <h2 className="mb-6 text-lg font-bold text-white">
               Сохранить как шаблон
             </h2>
 
-            <div className="space-y-2 mb-6">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider ml-1">
+            <div className="mb-6 space-y-2">
+              <label className="ml-1 text-xs font-semibold tracking-wider text-zinc-500 uppercase">
                 Название шаблона
               </label>
               <input
@@ -399,21 +399,21 @@ export default function WorkoutDetailsPage() {
                 onChange={(e) => setTemplateName(e.target.value)}
                 placeholder="Например: Грудь + Трицепс"
                 autoFocus
-                className="w-full h-12 px-4 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                className="h-12 w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 text-white placeholder-zinc-600 transition-all outline-none focus:border-transparent focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={() => setShowTemplateModal(false)}
-                className="flex-1 py-3 bg-zinc-800 text-white font-semibold rounded-xl hover:bg-zinc-700 transition-colors"
+                className="flex-1 rounded-xl bg-zinc-800 py-3 font-semibold text-white transition-colors hover:bg-zinc-700"
               >
                 Отмена
               </button>
               <button
                 onClick={handleSaveAsTemplate}
                 disabled={!templateName.trim() || savingTemplate}
-                className="flex-[2] py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-all disabled:opacity-50"
+                className="flex-[2] rounded-xl bg-orange-500 py-3 font-semibold text-white transition-all hover:bg-orange-600 disabled:opacity-50"
               >
                 {savingTemplate ? "Сохраняем..." : "Сохранить"}
               </button>

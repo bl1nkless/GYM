@@ -15,7 +15,7 @@ const supabaseAdmin = createClient(
       autoRefreshToken: false,
       persistSession: false,
     },
-  },
+  }
 );
 
 export async function POST(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!initData) {
       return NextResponse.json(
         { error: "initData is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!botToken) {
       return NextResponse.json(
         { error: "Bot token not configured" },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     if (!telegramData || !telegramData.user) {
       return NextResponse.json(
         { error: "Invalid Telegram data" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const email = getTelegramEmail(tgUser.id);
     const password = getTelegramPassword(
       tgUser.id,
-      process.env.TELEGRAM_AUTH_SECRET || botToken,
+      process.env.TELEGRAM_AUTH_SECRET || botToken
     );
 
     // Проверяем существует ли пользователь
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         console.error("Error creating user:", createError);
         return NextResponse.json(
           { error: "Failed to create user" },
-          { status: 500 },
+          { status: 500 }
         );
       }
 
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     console.error("Telegram auth error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

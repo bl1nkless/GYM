@@ -54,7 +54,7 @@ export default function AnalyticsClient({
 
   // Состояния UI
   const [expandedExercises, setExpandedExercises] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
   const [activeCategory, setActiveCategory] = useState("all");
   const [showWeightModal, setShowWeightModal] = useState(false);
@@ -87,7 +87,7 @@ export default function AnalyticsClient({
             exercises (name, muscle_groups (name)),
             workout_sessions!inner (user_id, performed_at),
             workout_sets (weight)
-          `,
+          `
           )
           .in("exercise_id", exerciseIds)
           .eq("workout_sessions.user_id", userId);
@@ -104,13 +104,13 @@ export default function AnalyticsClient({
             workout_sessions:
               we.workout_sessions as WorkoutExerciseRow["workout_sessions"],
             workout_sets: we.workout_sets as WorkoutExerciseRow["workout_sets"],
-          }),
+          })
         );
 
         const stats = buildExerciseStats(rows);
         const sorted = stats.sort(
           (a, b) =>
-            new Date(b.lastDate).getTime() - new Date(a.lastDate).getTime(),
+            new Date(b.lastDate).getTime() - new Date(a.lastDate).getTime()
         );
 
         if (mountedRef.current) {
@@ -123,7 +123,7 @@ export default function AnalyticsClient({
         }
       }
     },
-    [supabase, userId],
+    [supabase, userId]
   );
 
   // Загрузка данных из localStorage и начальная загрузка упражнений
@@ -199,36 +199,36 @@ export default function AnalyticsClient({
   return (
     <div className="min-h-screen bg-black pb-32">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800 px-4 pt-12 pb-4">
-        <div className="max-w-2xl mx-auto">
+      <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
+        <div className="mx-auto max-w-2xl">
           <h1 className="text-2xl font-bold text-white">Прогресс</h1>
         </div>
       </header>
 
-      <main className="px-4 pt-6 max-w-2xl mx-auto space-y-6">
+      <main className="mx-auto max-w-2xl space-y-6 px-4 pt-6">
         {/* Error Banner */}
         {errorMessage && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-400" />
             <div className="flex-1">
-              <p className="text-red-400 font-medium text-sm">
+              <p className="text-sm font-medium text-red-400">
                 Произошла ошибка
               </p>
-              <p className="text-red-300/70 text-sm mt-1">{errorMessage}</p>
+              <p className="mt-1 text-sm text-red-300/70">{errorMessage}</p>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-red-400/60 hover:text-red-400 transition-colors"
+              className="text-red-400/60 transition-colors hover:text-red-400"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
         {/* Stats Row */}
-        <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
-            <Flame className="w-6 h-6 text-orange-400" />
+        <div className="flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/20">
+            <Flame className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{totalWorkouts}</p>
@@ -246,18 +246,18 @@ export default function AnalyticsClient({
 
         {/* My Exercises Section */}
         <section>
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-white">Рабочие веса</h2>
               {isPending && (
-                <span className="w-4 h-4 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-orange-500/30 border-t-orange-500" />
               )}
             </div>
             <button
               onClick={() => setShowExerciseModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-sm text-zinc-300 transition-colors"
+              className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-700"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               <span>Добавить</span>
             </button>
           </div>
@@ -265,7 +265,7 @@ export default function AnalyticsClient({
           {/* Category Tabs */}
           {trackedExercises.length > 0 && (
             <div
-              className="flex gap-2 mb-4 overflow-x-auto pb-1"
+              className="mb-4 flex gap-2 overflow-x-auto pb-1"
               style={{ scrollbarWidth: "none" }}
             >
               {categories.map((cat) => {
@@ -273,7 +273,7 @@ export default function AnalyticsClient({
                   cat.key === "all"
                     ? trackedExercises.length
                     : trackedExercises.filter((e) =>
-                        cat.groups?.includes(e.muscleGroupName),
+                        cat.groups?.includes(e.muscleGroupName)
                       ).length;
 
                 if (cat.key !== "all" && count === 0) return null;
@@ -282,7 +282,7 @@ export default function AnalyticsClient({
                   <button
                     key={cat.key}
                     onClick={() => setActiveCategory(cat.key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all ${
                       activeCategory === cat.key
                         ? "bg-orange-500 text-white"
                         : "bg-zinc-800/80 text-zinc-400 hover:text-white"
@@ -303,16 +303,16 @@ export default function AnalyticsClient({
           {/* Exercise Cards or Empty State */}
           {trackedExercises.length === 0 ? (
             <div
-              className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800 border-dashed text-center cursor-pointer hover:border-zinc-700 transition-colors"
+              className="cursor-pointer rounded-2xl border border-dashed border-zinc-800 bg-zinc-900 p-6 text-center transition-colors hover:border-zinc-700"
               onClick={() => setShowExerciseModal(true)}
             >
-              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-3">
-                <Dumbbell className="w-6 h-6 text-zinc-600" />
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
+                <Dumbbell className="h-6 w-6 text-zinc-600" />
               </div>
-              <p className="text-zinc-500 text-sm mb-1">
+              <p className="mb-1 text-sm text-zinc-500">
                 Выбери упражнения для отслеживания
               </p>
-              <p className="text-zinc-600 text-xs">
+              <p className="text-xs text-zinc-600">
                 Показатели будут подсказывать во время тренировки
               </p>
             </div>

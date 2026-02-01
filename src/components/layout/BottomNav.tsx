@@ -57,14 +57,14 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="bottom-nav fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-lg border-t border-zinc-800 z-50 pb-safe">
-      <div className="max-w-2xl mx-auto flex justify-around items-center h-16 px-4">
+    <nav className="bottom-nav pb-safe fixed right-0 bottom-0 left-0 z-50 border-t border-zinc-800 bg-black/90 backdrop-blur-lg">
+      <div className="mx-auto flex h-16 max-w-2xl items-center justify-around px-4">
         <Link
           href="/app/workouts"
           className="flex flex-col items-center gap-1 py-2"
         >
           <svg
-            className={`w-6 h-6 ${
+            className={`h-6 w-6 ${
               isActive("/app/workouts") ? "text-orange-500" : "text-zinc-500"
             }`}
             fill="none"
@@ -92,7 +92,7 @@ export function BottomNav() {
           className="flex flex-col items-center gap-1 py-2"
         >
           <svg
-            className={`w-6 h-6 ${
+            className={`h-6 w-6 ${
               isActive("/app/analytics") ? "text-orange-500" : "text-zinc-500"
             }`}
             fill="none"
@@ -120,7 +120,7 @@ export function BottomNav() {
           className="flex flex-col items-center gap-1 py-2"
         >
           <svg
-            className={`w-6 h-6 ${
+            className={`h-6 w-6 ${
               isActive("/app/profile") ? "text-orange-500" : "text-zinc-500"
             }`}
             fill="none"
@@ -195,7 +195,7 @@ function TemplatePickerModal({
               )
             )
           )
-        `,
+        `
         )
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
@@ -236,12 +236,12 @@ function TemplatePickerModal({
 
       {/* Modal Content */}
       <div
-        className="relative w-full max-w-lg bg-zinc-900 rounded-t-3xl border-t border-zinc-700 shadow-2xl animate-slide-up"
+        className="animate-slide-up relative w-full max-w-lg rounded-t-3xl border-t border-zinc-700 bg-zinc-900 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-zinc-600 rounded-full" />
+          <div className="h-1 w-10 rounded-full bg-zinc-600" />
         </div>
 
         {/* Header */}
@@ -249,21 +249,21 @@ function TemplatePickerModal({
           <h2 className="text-xl font-bold text-white">Начать тренировку</h2>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full transition-colors"
+            className="-mr-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="px-5 pb-8 space-y-3">
+        <div className="space-y-3 px-5 pb-8">
           {/* Empty Workout Option */}
           <button
             onClick={handleStartEmpty}
-            className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl text-left group hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-500/20"
+            className="group flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 p-4 text-left shadow-lg shadow-orange-500/20 transition-all hover:from-orange-500 hover:to-orange-400"
           >
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <Dumbbell className="w-6 h-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20">
+              <Dumbbell className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-white">Пустая тренировка</h3>
@@ -277,11 +277,11 @@ function TemplatePickerModal({
           {/* Templates Section */}
           {loading ? (
             <div className="space-y-3 pt-2">
-              <div className="h-6 w-32 bg-zinc-800 rounded animate-pulse" />
+              <div className="h-6 w-32 animate-pulse rounded bg-zinc-800" />
               {[1, 2].map((i) => (
                 <div
                   key={i}
-                  className="h-20 bg-zinc-800 rounded-2xl animate-pulse"
+                  className="h-20 animate-pulse rounded-2xl bg-zinc-800"
                 />
               ))}
             </div>
@@ -299,16 +299,16 @@ function TemplatePickerModal({
                   <button
                     key={template.id}
                     onClick={() => handleStartWithTemplate(template.id)}
-                    className="w-full flex items-center gap-4 p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-2xl text-left group hover:bg-zinc-800 hover:border-zinc-600 transition-all"
+                    className="group flex w-full items-center gap-4 rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-4 text-left transition-all hover:border-zinc-600 hover:bg-zinc-800"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-zinc-700 flex items-center justify-center group-hover:bg-zinc-600 transition-colors">
-                      <FileText className="w-5 h-5 text-zinc-400" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-700 transition-colors group-hover:bg-zinc-600">
+                      <FileText className="h-5 w-5 text-zinc-400" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-white truncate">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-medium text-white">
                         {template.name}
                       </h3>
-                      <p className="text-xs text-zinc-500 truncate">
+                      <p className="truncate text-xs text-zinc-500">
                         {template.workout_template_exercises?.length || 0}{" "}
                         упражнений •{" "}
                         {template.workout_template_exercises
@@ -319,9 +319,9 @@ function TemplatePickerModal({
                           2 && "..."}
                       </p>
                     </div>
-                    <div className="text-zinc-600 group-hover:text-zinc-400 transition-colors">
+                    <div className="text-zinc-600 transition-colors group-hover:text-zinc-400">
                       <svg
-                        className="w-5 h-5"
+                        className="h-5 w-5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -342,13 +342,13 @@ function TemplatePickerModal({
               <Link
                 href="/app/templates"
                 onClick={onClose}
-                className="block text-center text-sm text-orange-500 hover:text-orange-400 pt-2 transition-colors"
+                className="block pt-2 text-center text-sm text-orange-500 transition-colors hover:text-orange-400"
               >
                 Все шаблоны →
               </Link>
             </>
           ) : (
-            <div className="text-center py-4">
+            <div className="py-4 text-center">
               <p className="text-sm text-zinc-500">
                 У вас пока нет шаблонов. Создайте первый после завершения
                 тренировки!
@@ -390,7 +390,7 @@ export function NewWorkoutFAB() {
   const activeWorkoutId = useSyncExternalStore(
     subscribeToActiveWorkout,
     getActiveWorkoutSnapshot,
-    getActiveWorkoutServerSnapshot,
+    getActiveWorkoutServerSnapshot
   );
 
   if (
@@ -418,7 +418,7 @@ export function NewWorkoutFAB() {
     <>
       <button
         onClick={handleClick}
-        className={`fab-new-workout${isActive ? " active" : ""}`}
+        className={`fab-new-workout${isActive ? "active" : ""}`}
         aria-label={label}
         title={label}
       >
