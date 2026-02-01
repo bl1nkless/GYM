@@ -263,13 +263,6 @@ export default function ExerciseSelectionModal({
           .animate-slide-up {
             animation: slide-up 0.3s ease-out forwards;
           }
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
         `}</style>
       </div>
     </div>

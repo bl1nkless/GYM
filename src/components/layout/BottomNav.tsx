@@ -418,7 +418,7 @@ export function NewWorkoutFAB() {
     <>
       <button
         onClick={handleClick}
-        className={`fab-new-workout${isActive ? "active" : ""}`}
+        className={`fab-new-workout${isActive ? " active" : ""}`}
         aria-label={label}
         title={label}
       >
