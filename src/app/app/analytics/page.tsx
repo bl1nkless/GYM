@@ -67,7 +67,6 @@ export default async function AnalyticsPage() {
       initialExercises={availableExercises}
       initialSelectedIds={[]}
       totalWorkouts={totalWorkouts ?? 0}
-      userId={user.id}
     />
   );
 }

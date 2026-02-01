@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { getExerciseHistory } from "@/app/app/analytics/actions";
 import type { ExerciseHistory } from "@/lib/analytics/buildExerciseStats";
 import {
   buildExerciseStats,
@@ -14,6 +14,7 @@ import ExerciseSelectionModal, {
 import WeightModal from "./WeightModal";
 import WeightCard from "./WeightCard";
 import { Flame, Plus, Dumbbell, AlertTriangle, X } from "lucide-react";
+// Supabase клиент удалён в пользу Server Actions
 
 // Категории для фильтрации
 const CATEGORY_GROUPS: Record<string, string[]> = {
@@ -29,7 +30,6 @@ interface AnalyticsClientProps {
   initialExercises: ExerciseOption[];
   initialSelectedIds: string[];
   totalWorkouts: number;
-  userId: string;
 }
 
 export default function AnalyticsClient({
@@ -37,7 +37,6 @@ export default function AnalyticsClient({
   initialExercises,
   initialSelectedIds,
   totalWorkouts,
-  userId,
 }: AnalyticsClientProps) {
   // Guard для защиты от setState после размонтирования
   const mountedRef = useRef(true);
@@ -68,8 +67,6 @@ export default function AnalyticsClient({
     { weight: number; date: string }[]
   >([]);
 
-  const supabase = createClient();
-
   // Загрузка истории упражнений (объявляем до useEffect)
   const loadExerciseHistory = useCallback(
     async (exerciseIds: string[]) => {
@@ -79,33 +76,22 @@ export default function AnalyticsClient({
       }
 
       try {
-        const { data: workoutExercises, error } = await supabase
-          .from("workout_exercises")
-          .select(
-            `
-            exercise_id,
-            exercises (name, muscle_groups (name)),
-            workout_sessions!inner (user_id, performed_at),
-            workout_sets (weight)
-          `
-          )
-          .in("exercise_id", exerciseIds)
-          .eq("workout_sessions.user_id", userId);
+        const result = await getExerciseHistory(exerciseIds);
 
-        if (error) throw error;
+        if (!result.success) {
+          throw new Error(result.error);
+        }
 
         // Guard: проверяем что компонент ещё смонтирован
         if (!mountedRef.current) return;
 
-        const rows: WorkoutExerciseRow[] = (workoutExercises ?? []).map(
-          (we) => ({
-            exercise_id: we.exercise_id,
-            exercises: we.exercises as WorkoutExerciseRow["exercises"],
-            workout_sessions:
-              we.workout_sessions as WorkoutExerciseRow["workout_sessions"],
-            workout_sets: we.workout_sets as WorkoutExerciseRow["workout_sets"],
-          })
-        );
+        const rows: WorkoutExerciseRow[] = (result.data ?? []).map((we) => ({
+          exercise_id: we.exercise_id!,
+          exercises: we.exercises as WorkoutExerciseRow["exercises"],
+          workout_sessions:
+            we.workout_sessions as WorkoutExerciseRow["workout_sessions"],
+          workout_sets: we.workout_sets as WorkoutExerciseRow["workout_sets"],
+        }));
 
         const stats = buildExerciseStats(rows);
         const sorted = stats.sort(
@@ -123,7 +109,7 @@ export default function AnalyticsClient({
         }
       }
     },
-    [supabase, userId]
+    [] // Зависимостей нет, серверный экшен импортирован
   );
 
   // Загрузка данных из localStorage и начальная загрузка упражнений
