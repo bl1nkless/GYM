@@ -318,6 +318,46 @@ function NewWorkoutContent() {
               continue;
             }
 
+            // Fetch recommended weight from history for this exercise
+            let recommendedWeight: number | null = null;
+            const { data: historyData } = await supabase
+              .from("workout_exercises")
+              .select(
+                `
+                perceived_difficulty,
+                workout_sessions!inner (user_id, performed_at, is_completed),
+                workout_sets (weight, reps, is_warmup)
+              `,
+              )
+              .eq("exercise_id", exercise.id)
+              .eq("workout_sessions.user_id", user.id)
+              .eq("workout_sessions.is_completed", true)
+              .order("workout_sessions(performed_at)", { ascending: false })
+              .limit(1);
+
+            if (historyData && historyData.length > 0) {
+              const lastWorkout = historyData[0];
+              const workingSets = (lastWorkout.workout_sets || [])
+                .filter((s: { is_warmup: boolean }) => !s.is_warmup)
+                .filter((s: { weight: number | null }) => s.weight !== null);
+
+              if (workingSets.length > 0) {
+                const prevWeight = workingSets[workingSets.length - 1].weight;
+                const step = 2.5;
+
+                // Adjust based on perceived difficulty
+                switch (lastWorkout.perceived_difficulty) {
+                  case "easy":
+                    recommendedWeight = prevWeight + step;
+                    break;
+                  case "hard":
+                  case "ok":
+                  default:
+                    recommendedWeight = prevWeight;
+                }
+              }
+            }
+
             addedExercises.push({
               id: weData.id,
               exercise,
@@ -325,13 +365,13 @@ function NewWorkoutContent() {
               sets: [
                 {
                   id: `temp-${Date.now()}-${i}`,
-                  weight: null,
+                  weight: recommendedWeight,
                   reps: null,
                   isWarmup: false,
                   isSaved: false,
                 },
               ],
-              recommendedWeight: null,
+              recommendedWeight,
               alternativeExercise: null,
               alternativeWeight: null,
               isSaved: true,
