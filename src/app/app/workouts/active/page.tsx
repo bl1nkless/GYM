@@ -260,7 +260,7 @@ function NewWorkoutContent() {
 
         if (!cancelled) {
           setSessionId(session.id);
-          setStartedAt(session.started_at);
+          setStartedAt(session.started_at ?? null);
           setWorkoutName(session.name || "");
           setExercises(restoredExercises);
           setLoading(false);
@@ -333,7 +333,6 @@ function NewWorkoutContent() {
         .insert({
           user_id: user.id,
           performed_at: now,
-          started_at: now,
           name: null,
           is_completed: false,
         })
@@ -345,6 +344,15 @@ function NewWorkoutContent() {
         if (!cancelled) setLoading(false);
         return;
       }
+
+      // Set started_at in DB (separate update to ensure compatibility)
+      await supabase
+        .from("workout_sessions")
+        .update({ started_at: now })
+        .eq("id", data.id);
+
+      // Set startedAt for timer display
+      if (!cancelled) setStartedAt(now);
 
       window.localStorage.setItem("activeWorkoutId", data.id);
       window.dispatchEvent(new Event("active-workout-change"));
@@ -532,7 +540,6 @@ function NewWorkoutContent() {
 
       if (!cancelled) {
         setSessionId(data.id);
-        setStartedAt(data.started_at);
         setLoading(false);
       }
     }

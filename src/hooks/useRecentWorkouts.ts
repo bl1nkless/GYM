@@ -18,7 +18,7 @@ interface WorkoutSessionRow {
   id: string;
   performed_at: string | null;
   name: string | null;
-  duration_minutes: number | null;
+  duration_minutes?: number | null;
   workout_exercises: Array<{
     exercises: {
       muscle_groups: {
@@ -96,7 +96,9 @@ const formatWorkoutSession = (session: WorkoutSessionRow): RecentWorkout => {
     id: session.id,
     title: session.name || "Тренировка",
     date: formatPerformedAt(session.performed_at),
-    duration: formatDuration(session.duration_minutes),
+    duration: session.duration_minutes
+      ? formatDuration(session.duration_minutes)
+      : "—",
     volume: totalTonnage > 0 ? `${(totalTonnage / 1000).toFixed(1)} т` : "-",
     tags: tags.slice(0, 2),
     isPr: false,
