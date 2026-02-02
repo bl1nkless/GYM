@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatDuration } from "@/hooks/useWorkoutTimer";
 
 export interface RecentWorkout {
   id: string;
@@ -17,6 +18,7 @@ interface WorkoutSessionRow {
   id: string;
   performed_at: string | null;
   name: string | null;
+  duration_minutes: number | null;
   workout_exercises: Array<{
     exercises: {
       muscle_groups: {
@@ -34,6 +36,7 @@ const WORKOUTS_SELECT = `
   id,
   performed_at,
   name,
+  duration_minutes,
   workout_exercises (
     exercises (
       muscle_groups ( name )
@@ -46,7 +49,6 @@ const WORKOUTS_SELECT = `
 `;
 
 export const WORKOUTS_PREVIEW_LIMIT = 10;
-const DEFAULT_WORKOUT_DURATION = "45м"; // TODO: compute duration
 
 const calcTonnage = (session: WorkoutSessionRow) => {
   let totalTonnage = 0;
@@ -94,7 +96,7 @@ const formatWorkoutSession = (session: WorkoutSessionRow): RecentWorkout => {
     id: session.id,
     title: session.name || "Тренировка",
     date: formatPerformedAt(session.performed_at),
-    duration: DEFAULT_WORKOUT_DURATION,
+    duration: formatDuration(session.duration_minutes),
     volume: totalTonnage > 0 ? `${(totalTonnage / 1000).toFixed(1)} т` : "-",
     tags: tags.slice(0, 2),
     isPr: false,

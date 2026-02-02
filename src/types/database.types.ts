@@ -153,29 +153,38 @@ export type Database = {
       workout_sessions: {
         Row: {
           created_at: string
+          duration_minutes: number | null
+          finished_at: string | null
           id: string
           is_completed: boolean
           name: string | null
           note: string | null
           performed_at: string
+          started_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
+          duration_minutes?: number | null
+          finished_at?: string | null
           id?: string
           is_completed?: boolean
           name?: string | null
           note?: string | null
           performed_at?: string
+          started_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
+          duration_minutes?: number | null
+          finished_at?: string | null
           id?: string
           is_completed?: boolean
           name?: string | null
           note?: string | null
           performed_at?: string
+          started_at?: string | null
           user_id?: string
         }
         Relationships: []

@@ -12,6 +12,10 @@ import type {
   ExerciseWithMuscleGroup,
   PerceivedDifficulty,
 } from "@/types";
+import {
+  useWorkoutTimer,
+  calculateDurationMinutes,
+} from "@/hooks/useWorkoutTimer";
 
 interface WorkoutSetRow {
   id: string;
@@ -33,12 +37,14 @@ interface WorkoutExerciseRow {
 interface ActiveWorkoutSessionRow {
   id: string;
   name: string | null;
+  started_at: string | null;
   workout_exercises: WorkoutExerciseRow[];
 }
 
 const ACTIVE_SESSION_SELECT = `
   id,
   name,
+  started_at,
   workout_exercises (
     id,
     order_index,
@@ -127,11 +133,18 @@ function buildAlternativeNote(
 
 function NewWorkoutContent() {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [startedAt, setStartedAt] = useState<string | null>(null);
   const [exercises, setExercises] = useState<WorkoutExerciseLocal[]>([]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [workoutName, setWorkoutName] = useState("");
+
+  // Workout timer hook
+  const { formattedTime } = useWorkoutTimer({
+    startedAt,
+    isActive: !saving,
+  });
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -215,8 +228,8 @@ function NewWorkoutContent() {
             const alternativeOptions = alternative?.allowedAlternativeIds
               ? alternative.allowedAlternativeIds
                   .map((id) => alternativeMap.get(id))
-                  .filter(
-                    (item): item is ExerciseWithMuscleGroup => Boolean(item)
+                  .filter((item): item is ExerciseWithMuscleGroup =>
+                    Boolean(item)
                   )
               : null;
 
@@ -247,6 +260,7 @@ function NewWorkoutContent() {
 
         if (!cancelled) {
           setSessionId(session.id);
+          setStartedAt(session.started_at);
           setWorkoutName(session.name || "");
           setExercises(restoredExercises);
           setLoading(false);
@@ -313,11 +327,13 @@ function NewWorkoutContent() {
         }
       }
 
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from("workout_sessions")
         .insert({
           user_id: user.id,
-          performed_at: new Date().toISOString(),
+          performed_at: now,
+          started_at: now,
           name: null,
           is_completed: false,
         })
@@ -378,8 +394,9 @@ function NewWorkoutContent() {
             );
 
           const templateAlternativeIds = sortedTemplateExercises.flatMap(
-            (templateExercise: { alternative_exercise_ids?: string[] | null }) =>
-              templateExercise.alternative_exercise_ids || []
+            (templateExercise: {
+              alternative_exercise_ids?: string[] | null;
+            }) => templateExercise.alternative_exercise_ids || []
           );
 
           const templateAlternativeMap = new Map<
@@ -422,9 +439,7 @@ function NewWorkoutContent() {
               templateExercise.alternative_exercise_ids || [];
             const alternativeOptions = allowedAlternativeIds
               .map((id) => templateAlternativeMap.get(id))
-              .filter(
-                (item): item is ExerciseWithMuscleGroup => Boolean(item)
-              );
+              .filter((item): item is ExerciseWithMuscleGroup => Boolean(item));
             const note = buildAlternativeNote(
               null,
               null,
@@ -517,6 +532,7 @@ function NewWorkoutContent() {
 
       if (!cancelled) {
         setSessionId(data.id);
+        setStartedAt(data.started_at);
         setLoading(false);
       }
     }
@@ -758,12 +774,7 @@ function NewWorkoutContent() {
         )
       );
 
-      await saveAlternativeNote(
-        exerciseId,
-        null,
-        null,
-        allowedAlternativeIds
-      );
+      await saveAlternativeNote(exerciseId, null, null, allowedAlternativeIds);
     },
     [getAllowedAlternativeIds, saveAlternativeNote]
   );
@@ -791,7 +802,7 @@ function NewWorkoutContent() {
         weight,
         exercise?.alternativeOptions === null
           ? undefined
-          : exercise?.alternativeOptions?.map((option) => option.id) ?? []
+          : (exercise?.alternativeOptions?.map((option) => option.id) ?? [])
       );
     },
     [exercises, saveAlternativeNote]
@@ -871,12 +882,17 @@ function NewWorkoutContent() {
       }
     }
 
-    // Update workout name and status
+    // Update workout name, status, and timing
+    const finishedAt = new Date().toISOString();
+    const durationMinutes = calculateDurationMinutes(startedAt, finishedAt);
+
     await supabase
       .from("workout_sessions")
       .update({
         name: workoutName || null,
         is_completed: true,
+        finished_at: finishedAt,
+        duration_minutes: durationMinutes,
       })
       .eq("id", sessionId);
 
@@ -921,7 +937,29 @@ function NewWorkoutContent() {
                 />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold text-white">Новая тренировка</h1>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold text-white">Новая тренировка</h1>
+              {startedAt && (
+                <div className="flex items-center gap-1.5 text-sm text-zinc-400">
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="font-mono tabular-nums">
+                    {formattedTime}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {exercises.length > 0 && (
