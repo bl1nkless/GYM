@@ -223,18 +223,21 @@ export type Database = {
       }
       workout_template_exercises: {
         Row: {
+          alternative_exercise_ids: string[]
           exercise_id: string
           id: string
           order_index: number
           template_id: string
         }
         Insert: {
+          alternative_exercise_ids?: string[]
           exercise_id: string
           id?: string
           order_index?: number
           template_id: string
         }
         Update: {
+          alternative_exercise_ids?: string[]
           exercise_id?: string
           id?: string
           order_index?: number

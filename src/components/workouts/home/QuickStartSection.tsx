@@ -49,7 +49,7 @@ export function QuickStartSection() {
       <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
         {/* New Workout Card */}
         <Link
-          href="/app/workouts/new"
+          href="/app/workouts/active"
           className="group flex h-36 w-32 flex-shrink-0 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-700 text-zinc-500 transition-all hover:border-orange-500 hover:bg-zinc-900/50 hover:text-orange-500"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 transition-colors group-hover:bg-orange-500/20">
@@ -71,7 +71,7 @@ export function QuickStartSection() {
           templates.map((template) => (
             <Link
               key={template.id}
-              href={`/app/workouts/new?template=${template.id}`}
+              href={`/app/workouts/active?template=${template.id}`}
               className="flex h-36 w-36 flex-shrink-0 cursor-pointer flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-zinc-700"
             >
               <BarbellIcon

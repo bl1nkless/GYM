@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 interface TemplateExercise {
@@ -22,9 +23,11 @@ interface Template {
 }
 
 export default function TemplatesPage() {
+  const router = useRouter();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const supabase = createClient();
 
@@ -78,11 +81,38 @@ export default function TemplatesPage() {
     setDeletingId(null);
   };
 
+  const handleCreateTemplate = async () => {
+    setCreating(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setCreating(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("workout_templates")
+      .insert({ user_id: user.id, name: "Новый шаблон" })
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error("Error creating template:", error);
+      setCreating(false);
+      return;
+    }
+
+    setCreating(false);
+    router.push(`/app/templates/${data.id}`);
+  };
+
   return (
     <div className="min-h-screen bg-black pb-32">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
-        <div className="mx-auto flex max-w-2xl items-center gap-4">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
           <Link
             href="/app/profile"
             className="-ml-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
@@ -102,6 +132,14 @@ export default function TemplatesPage() {
             </svg>
           </Link>
           <h1 className="text-2xl font-bold text-white">Шаблоны</h1>
+          </div>
+          <button
+            onClick={handleCreateTemplate}
+            disabled={creating}
+            className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-600 disabled:opacity-50"
+          >
+            {creating ? "Создаём..." : "Новый шаблон"}
+          </button>
         </div>
       </header>
 
@@ -147,29 +185,37 @@ export default function TemplatesPage() {
               >
                 <div className="mb-3 flex items-start justify-between">
                   <h3 className="font-semibold text-white">{template.name}</h3>
-                  <button
-                    onClick={() => handleDelete(template.id)}
-                    disabled={deletingId === template.id}
-                    className="-mr-2 rounded-xl p-2 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
-                  >
-                    {deletingId === template.id ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
-                    ) : (
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/app/templates/${template.id}`}
+                      className="rounded-lg bg-zinc-800 px-2 py-1 text-xs font-semibold text-zinc-300 transition-colors hover:bg-zinc-700"
+                    >
+                      Редактировать
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(template.id)}
+                      disabled={deletingId === template.id}
+                      className="-mr-2 rounded-xl p-2 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                    >
+                      {deletingId === template.id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
+                      ) : (
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mb-3 flex flex-wrap gap-2">

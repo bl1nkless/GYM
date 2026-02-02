@@ -8,6 +8,9 @@ import { ChevronRight, Search, X } from "lucide-react";
 interface ExerciseSwapModalProps {
   isOpen: boolean;
   currentExercise: ExerciseWithMuscleGroup;
+  allowedExerciseIds?: string[] | null;
+  excludedExerciseIds?: string[];
+  emptyText?: string;
   onClose: () => void;
   onSelect: (exercise: ExerciseWithMuscleGroup) => void;
 }
@@ -15,6 +18,9 @@ interface ExerciseSwapModalProps {
 export function ExerciseSwapModal({
   isOpen,
   currentExercise,
+  allowedExerciseIds,
+  excludedExerciseIds,
+  emptyText = "Нет альтернатив для этой группы",
   onClose,
   onSelect,
 }: ExerciseSwapModalProps) {
@@ -33,6 +39,7 @@ export function ExerciseSwapModal({
     async function loadAlternatives() {
       setLoading(true);
       setQuery("");
+      setAlternatives([]);
 
       const {
         data: { user },
@@ -42,19 +49,40 @@ export function ExerciseSwapModal({
         return;
       }
 
-      const { data, error } = await supabase
+      const allowedIds = (allowedExerciseIds || []).filter(
+        (id) => id && id !== currentExercise.id
+      );
+
+      if (allowedExerciseIds && allowedIds.length === 0) {
+        if (!cancelled) {
+          setAlternatives([]);
+          setLoading(false);
+        }
+        return;
+      }
+
+      const queryBuilder = supabase
         .from("exercises")
         .select(
           `
           *,
           muscle_groups (*)
         `
-        )
-        .eq("primary_muscle_group_id", currentExercise.primary_muscle_group_id)
-        .neq("id", currentExercise.id)
-        .or(`is_global.eq.true,user_id.eq.${user.id}`)
-        .order("name", { ascending: true })
-        .limit(30);
+        );
+
+      const { data, error } = allowedExerciseIds
+        ? await queryBuilder
+            .in("id", allowedIds)
+            .order("name", { ascending: true })
+        : await queryBuilder
+            .eq(
+              "primary_muscle_group_id",
+              currentExercise.primary_muscle_group_id
+            )
+            .neq("id", currentExercise.id)
+            .or(`is_global.eq.true,user_id.eq.${user.id}`)
+            .order("name", { ascending: true })
+            .limit(30);
 
       if (cancelled) return;
 
@@ -64,7 +92,15 @@ export function ExerciseSwapModal({
         return;
       }
 
-      setAlternatives((data || []) as ExerciseWithMuscleGroup[]);
+      const excluded = new Set<string>([
+        currentExercise.id,
+        ...(excludedExerciseIds || []),
+      ]);
+      const filtered = (data || []).filter(
+        (exercise) => !excluded.has(exercise.id)
+      );
+
+      setAlternatives(filtered as ExerciseWithMuscleGroup[]);
       setLoading(false);
     }
 
@@ -76,6 +112,8 @@ export function ExerciseSwapModal({
     isOpen,
     currentExercise.id,
     currentExercise.primary_muscle_group_id,
+    allowedExerciseIds,
+    excludedExerciseIds,
     supabase,
   ]);
 
@@ -161,9 +199,7 @@ export function ExerciseSwapModal({
           </div>
         ) : (
           <div className="empty-state" style={{ padding: "var(--space-lg)" }}>
-            <p className="text-small text-muted">
-              Нет альтернатив для этой группы
-            </p>
+            <p className="text-small text-muted">{emptyText}</p>
           </div>
         )}
       </div>

@@ -43,6 +43,9 @@ export function ExerciseBlock({
   const [showMenu, setShowMenu] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [showAlternativeModal, setShowAlternativeModal] = useState(false);
+  const hasRestrictedAlternatives = exercise.alternativeOptions !== null;
+  const hasAlternativeOptions =
+    (exercise.alternativeOptions?.length || 0) > 0;
 
   const handleAddSet = useCallback(() => {
     const lastSet = exercise.sets[exercise.sets.length - 1];
@@ -311,7 +314,8 @@ export function ExerciseBlock({
             <span className="text-xs text-zinc-500">Альтернатива</span>
             <button
               type="button"
-              className="text-xs font-semibold text-orange-400 transition-colors hover:text-orange-300"
+              disabled={hasRestrictedAlternatives && !hasAlternativeOptions}
+              className="text-xs font-semibold text-orange-400 transition-colors hover:text-orange-300 disabled:cursor-not-allowed disabled:text-zinc-600"
               onClick={() => setShowAlternativeModal(true)}
             >
               {exercise.alternativeExercise ? "Заменить" : "Добавить"}
@@ -366,7 +370,9 @@ export function ExerciseBlock({
             </div>
           ) : (
             <div className="text-xs text-zinc-500">
-              Добавь упражнение на случай замены.
+              {hasRestrictedAlternatives && !hasAlternativeOptions
+                ? "В шаблоне нет альтернатив для этого упражнения."
+                : "Добавь упражнение на случай замены."}
             </div>
           )}
         </div>
@@ -424,6 +430,16 @@ export function ExerciseBlock({
       <ExerciseSwapModal
         isOpen={showAlternativeModal}
         currentExercise={exercise.exercise}
+        allowedExerciseIds={
+          hasRestrictedAlternatives
+            ? exercise.alternativeOptions?.map((item) => item.id) ?? []
+            : undefined
+        }
+        emptyText={
+          hasRestrictedAlternatives
+            ? "Альтернативы не добавлены в шаблон."
+            : "Нет альтернатив для этой группы"
+        }
         onClose={() => setShowAlternativeModal(false)}
         onSelect={(newExercise) => {
           onSetAlternative(newExercise);

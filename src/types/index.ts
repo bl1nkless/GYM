@@ -71,5 +71,6 @@ export interface WorkoutExerciseLocal {
   recommendedWeight: number | null;
   alternativeExercise: ExerciseWithMuscleGroup | null;
   alternativeWeight: number | null;
+  alternativeOptions: ExerciseWithMuscleGroup[] | null;
   isSaved: boolean;
 }

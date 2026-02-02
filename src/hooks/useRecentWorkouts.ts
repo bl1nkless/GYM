@@ -138,6 +138,7 @@ export function useRecentWorkouts(limit = WORKOUTS_PREVIEW_LIMIT) {
       .from("workout_sessions")
       .select(WORKOUTS_SELECT)
       .eq("user_id", user.id)
+      .eq("is_completed", true)
       .order("performed_at", { ascending: false })
       .limit(limit);
 
