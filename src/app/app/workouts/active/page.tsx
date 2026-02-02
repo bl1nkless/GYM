@@ -12,10 +12,7 @@ import type {
   ExerciseWithMuscleGroup,
   PerceivedDifficulty,
 } from "@/types";
-import {
-  useWorkoutTimer,
-  calculateDurationMinutes,
-} from "@/hooks/useWorkoutTimer";
+import { useWorkoutTimer } from "@/hooks/useWorkoutTimer";
 
 interface WorkoutSetRow {
   id: string;
@@ -370,6 +367,7 @@ function NewWorkoutContent() {
             workout_template_exercises (
               id,
               order_index,
+              sets_count,
               alternative_exercise_ids,
               exercises (
                 *,
@@ -393,13 +391,16 @@ function NewWorkoutContent() {
 
           // Sort template exercises by order_index
           const sortedTemplateExercises = (
-            templateData.workout_template_exercises || []
+            (templateData.workout_template_exercises ||
+              []) as unknown as Array<{
+              order_index: number;
+              sets_count?: number;
+              exercises: ExerciseWithMuscleGroup;
+              alternative_exercise_ids?: string[] | null;
+            }>
           )
             .slice()
-            .sort(
-              (a: { order_index: number }, b: { order_index: number }) =>
-                a.order_index - b.order_index
-            );
+            .sort((a, b) => a.order_index - b.order_index);
 
           const templateAlternativeIds = sortedTemplateExercises.flatMap(
             (templateExercise: {
@@ -436,10 +437,12 @@ function NewWorkoutContent() {
           for (let i = 0; i < sortedTemplateExercises.length; i++) {
             const templateExercise = sortedTemplateExercises[i] as {
               exercises: ExerciseWithMuscleGroup;
+              sets_count?: number;
               alternative_exercise_ids?: string[] | null;
             };
             const exercise =
               templateExercise.exercises as ExerciseWithMuscleGroup;
+            const setsCount = templateExercise.sets_count ?? 3;
 
             if (!exercise) continue;
 
@@ -511,19 +514,23 @@ function NewWorkoutContent() {
               }
             }
 
+            // Create empty sets based on template sets_count
+            const emptySets = Array.from(
+              { length: setsCount },
+              (_, setIndex) => ({
+                id: `temp-${Date.now()}-${i}-${setIndex}`,
+                weight: recommendedWeight,
+                reps: null,
+                isWarmup: false,
+                isSaved: false,
+              })
+            );
+
             addedExercises.push({
               id: weData.id,
               exercise,
               perceivedDifficulty: null,
-              sets: [
-                {
-                  id: `temp-${Date.now()}-${i}`,
-                  weight: recommendedWeight,
-                  reps: null,
-                  isWarmup: false,
-                  isSaved: false,
-                },
-              ],
+              sets: emptySets,
               recommendedWeight,
               alternativeExercise: null,
               alternativeWeight: null,
@@ -889,19 +896,16 @@ function NewWorkoutContent() {
       }
     }
 
-    // Update workout name, status, and timing
-    const finishedAt = new Date().toISOString();
-    const durationMinutes = calculateDurationMinutes(startedAt, finishedAt);
+    // Finish workout via RPC (duration calculated on DB side)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: rpcError } = await (supabase.rpc as any)("finish_workout", {
+      p_session_id: sessionId,
+      p_name: workoutName || null,
+    });
 
-    await supabase
-      .from("workout_sessions")
-      .update({
-        name: workoutName || null,
-        is_completed: true,
-        finished_at: finishedAt,
-        duration_minutes: durationMinutes,
-      })
-      .eq("id", sessionId);
+    if (rpcError) {
+      console.error("Error finishing workout:", rpcError);
+    }
 
     window.localStorage.removeItem("activeWorkoutId");
     window.dispatchEvent(new Event("active-workout-change"));

@@ -6,20 +6,26 @@ import {
   getTelegramPassword,
 } from "@/lib/telegram";
 
-// Supabase Admin клиент (с service_role ключом)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+// Force dynamic rendering (not static)
+export const dynamic = "force-dynamic";
+
+// Helper to create Supabase Admin client lazily
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { initData } = await request.json();
 
     if (!initData) {
@@ -55,7 +61,9 @@ export async function POST(request: NextRequest) {
 
     // Проверяем существует ли пользователь
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find((u) => u.email === email);
+    const existingUser = existingUsers?.users?.find(
+      (u: { email?: string }) => u.email === email
+    );
 
     let userId: string;
 

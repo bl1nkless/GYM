@@ -104,7 +104,7 @@ export function formatDuration(durationMinutes: number | null): string {
   }
 
   if (durationMinutes < 1) {
-    return "<1м";
+    return "1м";
   }
 
   const hours = Math.floor(durationMinutes / 60);

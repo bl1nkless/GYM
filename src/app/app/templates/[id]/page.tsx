@@ -11,6 +11,7 @@ import type { ExerciseWithMuscleGroup } from "@/types";
 interface TemplateExerciseRow {
   id: string;
   order_index: number;
+  sets_count: number;
   alternative_exercise_ids: string[] | null;
   exercises: ExerciseWithMuscleGroup;
 }
@@ -18,6 +19,7 @@ interface TemplateExerciseRow {
 interface TemplateExerciseLocal {
   id: string;
   orderIndex: number;
+  setsCount: number;
   exercise: ExerciseWithMuscleGroup;
   alternatives: ExerciseWithMuscleGroup[];
 }
@@ -38,8 +40,9 @@ export default function TemplateDetailsPage() {
   const [replaceTarget, setReplaceTarget] =
     useState<TemplateExerciseLocal | null>(null);
   const [savingExerciseId, setSavingExerciseId] = useState<string | null>(null);
-  const [deletingExerciseId, setDeletingExerciseId] =
-    useState<string | null>(null);
+  const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +59,7 @@ export default function TemplateDetailsPage() {
           workout_template_exercises (
             id,
             order_index,
+            sets_count,
             alternative_exercise_ids,
             exercises (
               *,
@@ -75,7 +79,8 @@ export default function TemplateDetailsPage() {
         return;
       }
 
-      const rows = (data.workout_template_exercises || []) as TemplateExerciseRow[];
+      const rows = (data.workout_template_exercises ||
+        []) as unknown as TemplateExerciseRow[];
       const alternativeIds = rows.flatMap(
         (row) => row.alternative_exercise_ids || []
       );
@@ -103,13 +108,12 @@ export default function TemplateDetailsPage() {
         .map((row) => {
           const alternatives = (row.alternative_exercise_ids || [])
             .map((id) => alternativeMap.get(id))
-            .filter(
-              (item): item is ExerciseWithMuscleGroup => Boolean(item)
-            );
+            .filter((item): item is ExerciseWithMuscleGroup => Boolean(item));
 
           return {
             id: row.id,
             orderIndex: row.order_index,
+            setsCount: row.sets_count,
             exercise: row.exercises,
             alternatives,
           };
@@ -147,12 +151,14 @@ export default function TemplateDetailsPage() {
   const handleAddExercise = async (exercise: ExerciseWithMuscleGroup) => {
     const orderIndex =
       exercises.reduce((max, item) => Math.max(max, item.orderIndex), -1) + 1;
+    const defaultSetsCount = 3;
     const { data, error } = await supabase
       .from("workout_template_exercises")
       .insert({
         template_id: templateId,
         exercise_id: exercise.id,
         order_index: orderIndex,
+        sets_count: defaultSetsCount,
         alternative_exercise_ids: [],
       })
       .select()
@@ -168,6 +174,7 @@ export default function TemplateDetailsPage() {
       {
         id: data.id,
         orderIndex,
+        setsCount: defaultSetsCount,
         exercise,
         alternatives: [],
       },
@@ -203,7 +210,11 @@ export default function TemplateDetailsPage() {
     );
     const targetIndex = currentIndex + direction;
 
-    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= exercises.length) {
+    if (
+      currentIndex < 0 ||
+      targetIndex < 0 ||
+      targetIndex >= exercises.length
+    ) {
       return;
     }
 
@@ -308,8 +319,35 @@ export default function TemplateDetailsPage() {
     const target = exercises.find((ex) => ex.id === templateExerciseId);
     if (!target) return;
 
-    const updated = target.alternatives.filter((alt) => alt.id !== alternativeId);
+    const updated = target.alternatives.filter(
+      (alt) => alt.id !== alternativeId
+    );
     await updateAlternativeIds(templateExerciseId, updated);
+  };
+
+  const handleUpdateSetsCount = async (
+    templateExerciseId: string,
+    newCount: number
+  ) => {
+    const clampedCount = Math.max(1, Math.min(10, newCount));
+
+    // Update local state immediately for responsive UI
+    setExercises((prev) =>
+      prev.map((ex) =>
+        ex.id === templateExerciseId ? { ...ex, setsCount: clampedCount } : ex
+      )
+    );
+
+    // Save to database
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from("workout_template_exercises")
+      .update({ sets_count: clampedCount })
+      .eq("id", templateExerciseId);
+
+    if (error) {
+      console.error("Error updating sets count:", error);
+    }
   };
 
   if (loading) {
@@ -432,6 +470,34 @@ export default function TemplateDetailsPage() {
                         />
                       </svg>
                     )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Sets count editor */}
+              <div className="mt-4 flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-800/40 px-4 py-3">
+                <span className="text-sm text-zinc-400">Подходов</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() =>
+                      handleUpdateSetsCount(exercise.id, exercise.setsCount - 1)
+                    }
+                    disabled={exercise.setsCount <= 1}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-700 text-lg font-bold text-white transition-colors hover:bg-zinc-600 disabled:opacity-30"
+                  >
+                    −
+                  </button>
+                  <span className="min-w-[2ch] text-center text-lg font-bold text-white">
+                    {exercise.setsCount}
+                  </span>
+                  <button
+                    onClick={() =>
+                      handleUpdateSetsCount(exercise.id, exercise.setsCount + 1)
+                    }
+                    disabled={exercise.setsCount >= 10}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-700 text-lg font-bold text-white transition-colors hover:bg-zinc-600 disabled:opacity-30"
+                  >
+                    +
                   </button>
                 </div>
               </div>
