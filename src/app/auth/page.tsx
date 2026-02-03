@@ -15,10 +15,10 @@ export default function AuthPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Redirect to home if inside Telegram (silent auth happens via AppInit)
+  // Redirect to bootstrap if inside Telegram
   useEffect(() => {
     if (isTelegram()) {
-      router.replace("/app/workouts");
+      router.replace("/tg/bootstrap");
     }
   }, [router]);
 
