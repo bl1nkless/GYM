@@ -9,6 +9,8 @@ import {
 } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { isTelegram } from "@/lib/isTelegram";
+import { createSupabaseSessionFromTelegram } from "@/lib/tgAuth";
 
 interface TelegramUser {
   id: number;
@@ -82,62 +84,49 @@ declare global {
 }
 
 export function TelegramProvider({ children }: { children: ReactNode }) {
-  const [isTelegram, setIsTelegram] = useState(false);
+  const [isTg, setIsTg] = useState(false);
   const [telegramUser, setTelegramUser] = useState<TelegramUser | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function initTelegram() {
-      // Проверяем есть ли Telegram WebApp
-      if (typeof window !== "undefined" && window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
+    async function initAuth() {
+      const supabase = createClient();
 
-        setIsTelegram(true);
+      // Check if running inside Telegram
+      if (isTelegram()) {
+        const tg = window.Telegram!.WebApp;
+        setIsTg(true);
         tg.ready();
         tg.expand();
 
-        const initData = tg.initData;
+        // Get Telegram user from initDataUnsafe
         const tgUser = tg.initDataUnsafe.user;
-
         if (tgUser) {
           setTelegramUser(tgUser);
         }
 
-        if (initData) {
-          // Авторизуемся через наш API
-          try {
-            const response = await fetch("/api/auth/telegram", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ initData }),
-            });
+        try {
+          // Authenticate with Supabase using Telegram initData
+          await createSupabaseSessionFromTelegram(supabase);
 
-            const data = await response.json();
+          // Get the authenticated user
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
 
-            if (data.success && data.method === "credentials") {
-              // Логинимся в Supabase
-              const supabase = createClient();
-              const { data: authData, error } =
-                await supabase.auth.signInWithPassword({
-                  email: data.email,
-                  password: data.password,
-                });
-
-              if (!error && authData.user) {
-                setSupabaseUser(authData.user);
-              }
-            }
-          } catch (error) {
-            console.error("Telegram auth error:", error);
+          if (user) {
+            setSupabaseUser(user);
           }
+        } catch (error) {
+          console.error("Telegram auth error:", error);
         }
       } else {
-        // Обычный браузер - проверяем Supabase сессию
-        const supabase = createClient();
+        // Regular browser - check existing Supabase session
         const {
           data: { user },
         } = await supabase.auth.getUser();
+
         if (user) {
           setSupabaseUser(user);
         }
@@ -146,13 +135,13 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
 
-    initTelegram();
+    initAuth();
   }, []);
 
   return (
     <TelegramContext.Provider
       value={{
-        isTelegram,
+        isTelegram: isTg,
         telegramUser,
         supabaseUser,
         isLoading,

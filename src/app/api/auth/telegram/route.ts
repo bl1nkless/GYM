@@ -1,137 +1,166 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
-import {
-  validateTelegramInitData,
-  getTelegramEmail,
-  getTelegramPassword,
-} from "@/lib/telegram";
 
-// Force dynamic rendering (not static)
+// Force dynamic rendering
 export const dynamic = "force-dynamic";
 
-// Helper to create Supabase Admin client lazily
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+/**
+ * Validate Telegram initData using HMAC-SHA256
+ * Secret = sha256(BOT_TOKEN)
+ */
+function validateInitData(initData: string, botToken: string): boolean {
+  const url = new URLSearchParams(initData);
+  const data: Record<string, string> = {};
+  url.forEach((v, k) => (data[k] = v));
+
+  const hash = data.hash;
+  delete data.hash;
+
+  const checkString = Object.keys(data)
+    .sort()
+    .map((k) => `${k}=${data[k]}`)
+    .join("\n");
+
+  const secretKey = crypto.createHash("sha256").update(botToken).digest();
+  const h = crypto
+    .createHmac("sha256", secretKey)
+    .update(checkString)
+    .digest("hex");
+
+  return h === hash;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
-    const { initData } = await request.json();
+    const { initData } = await req.json();
 
-    if (!initData) {
-      return NextResponse.json(
-        { error: "initData is required" },
-        { status: 400 }
-      );
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!initData || !BOT_TOKEN) {
+      return NextResponse.json({ error: "Bad request" }, { status: 400 });
     }
 
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    if (!botToken) {
+    if (!SUPABASE_URL || !SERVICE_ROLE || !ANON_KEY) {
+      console.error("Missing Supabase environment variables");
       return NextResponse.json(
-        { error: "Bot token not configured" },
+        { error: "Server configuration error" },
         { status: 500 }
       );
     }
 
-    // Валидируем данные от Telegram
-    const telegramData = validateTelegramInitData(initData, botToken);
-    if (!telegramData || !telegramData.user) {
+    // Validate initData signature
+    if (!validateInitData(initData, BOT_TOKEN)) {
+      console.warn("Invalid Telegram initData signature");
+      return NextResponse.json({ error: "Invalid initData" }, { status: 401 });
+    }
+
+    // Parse user data from initData
+    const params = new URLSearchParams(initData);
+    const userStr = params.get("user");
+    if (!userStr) {
       return NextResponse.json(
-        { error: "Invalid Telegram data" },
-        { status: 401 }
+        { error: "No user in initData" },
+        { status: 400 }
       );
     }
 
-    const { user: tgUser } = telegramData;
-    const email = getTelegramEmail(tgUser.id);
-    const password = getTelegramPassword(
-      tgUser.id,
-      process.env.TELEGRAM_AUTH_SECRET || botToken
-    );
+    const tg = JSON.parse(userStr);
+    const tg_id = String(tg.id);
+    const username = tg.username || "";
+    const first_name = tg.first_name || "";
+    const last_name = tg.last_name || "";
+    const full_name = [first_name, last_name].filter(Boolean).join(" ");
 
-    // Проверяем существует ли пользователь
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u: { email?: string }) => u.email === email
-    );
+    // Synthetic email for this Telegram user
+    const email = `tg_${tg_id}@telegram.local`;
 
-    let userId: string;
+    // Supabase clients
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const anon = createClient(SUPABASE_URL, ANON_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
-    if (existingUser) {
-      // Пользователь существует - логиним
-      userId = existingUser.id;
-    } else {
-      // Создаем нового пользователя
-      const { data: newUser, error: createError } =
-        await supabaseAdmin.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true, // Автоматически подтверждаем email
-          user_metadata: {
-            telegram_id: tgUser.id,
-            first_name: tgUser.first_name,
-            last_name: tgUser.last_name,
-            username: tgUser.username,
-            photo_url: tgUser.photo_url,
-          },
-        });
+    // Idempotently create/update user
+    const { error: createErr } = await admin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: {
+        telegram_id: tg_id,
+        username,
+        first_name,
+        last_name,
+        full_name,
+        photo_url: tg.photo_url,
+      },
+    });
 
-      if (createError || !newUser.user) {
-        console.error("Error creating user:", createError);
-        return NextResponse.json(
-          { error: "Failed to create user" },
-          { status: 500 }
-        );
+    // Ignore "user already exists" errors (422 or 409)
+    if (createErr) {
+      const status = (createErr as unknown as { status?: number }).status;
+      if (status !== 422 && status !== 409) {
+        // Check if it's actually a duplicate user error by message
+        if (!createErr.message?.includes("already been registered")) {
+          console.error("Error creating user:", createErr);
+          return NextResponse.json(
+            { error: "Failed to create user" },
+            { status: 500 }
+          );
+        }
       }
-
-      userId = newUser.user.id;
     }
 
-    // Создаем сессию через signInWithPassword (клиентская библиотека)
-    // Или используем генерацию токена через Admin API
-    const { data: session, error: signInError } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email,
-      });
+    // Generate magiclink to get OTP
+    const { data: link, error: linkErr } = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
 
-    if (signInError) {
-      console.error("Error generating session:", signInError);
-
-      // Fallback: возвращаем email/password для клиентского логина
-      return NextResponse.json({
-        success: true,
-        method: "credentials",
-        email,
-        password,
-        user: {
-          id: userId,
-          telegram_id: tgUser.id,
-          first_name: tgUser.first_name,
-          username: tgUser.username,
-        },
-      });
+    if (linkErr || !link) {
+      console.error("Error generating link:", linkErr);
+      return NextResponse.json(
+        { error: linkErr?.message || "Failed to generate link" },
+        { status: 500 }
+      );
     }
+
+    // Extract OTP from link properties
+    const otp = link.properties?.email_otp as string | undefined;
+    if (!otp) {
+      console.error("No OTP in generated link");
+      return NextResponse.json({ error: "No OTP generated" }, { status: 500 });
+    }
+
+    // Verify OTP to get session (server-side)
+    const { data: verified, error: vErr } = await anon.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "magiclink",
+    });
+
+    if (vErr || !verified?.session) {
+      console.error("Error verifying OTP:", vErr);
+      return NextResponse.json(
+        { error: vErr?.message || "Verification failed" },
+        { status: 500 }
+      );
+    }
+
+    const { access_token, refresh_token, expires_in, user } = verified.session;
 
     return NextResponse.json({
-      success: true,
-      method: "link",
-      link: session.properties?.action_link,
+      access_token,
+      refresh_token,
+      expires_in,
       user: {
-        id: userId,
-        telegram_id: tgUser.id,
-        first_name: tgUser.first_name,
-        username: tgUser.username,
+        id: user.id,
+        email: user.email,
+        user_metadata: user.user_metadata,
       },
     });
   } catch (error) {
