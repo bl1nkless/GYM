@@ -80,6 +80,10 @@
   /* Safe area for mobile */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Telegram viewport fix */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --vh: 1vh; /* Will be set by useTelegramViewport hook */
 }
 
 /* ===== Base Styles ===== */
@@ -121,6 +125,17 @@ body {
 .page-content {
   padding: var(--space-lg);
   padding-top: calc(var(--space-lg) + var(--safe-area-top));
+}
+
+/* Telegram viewport utilities */
+.page {
+  min-height: 100dvh;
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+}
+
+.tg-safe {
+  padding-bottom: max(var(--safe-bottom), 12px);
 }
 
 /* ===== Typography ===== */
