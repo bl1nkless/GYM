@@ -316,5 +316,5 @@ function showFinishButton(): void {
   const btn = getBottomButton();
   if (!btn) return;
   btn.setText?.("Завершить тренировку");
-  btn.show?.();
+  // btn.show?.(); // DISABLED - using in-app button instead
 }
