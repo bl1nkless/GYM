@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { isTelegram } from "@/lib/isTelegram";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -13,6 +14,13 @@ export default function AuthPage() {
 
   const router = useRouter();
   const supabase = createClient();
+
+  // Redirect to home if inside Telegram (silent auth happens via AppInit)
+  useEffect(() => {
+    if (isTelegram()) {
+      router.replace("/app/workouts");
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

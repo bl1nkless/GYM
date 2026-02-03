@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import { TelegramProvider } from "@/components/providers/TelegramProvider";
+import AppInit from "./_components/AppInit";
 import "./globals.css";
 
 const inter = Inter({
@@ -49,7 +50,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable}`}>
-        <TelegramProvider>{children}</TelegramProvider>
+        <TelegramProvider>
+          <AppInit />
+          {children}
+        </TelegramProvider>
       </body>
     </html>
   );
