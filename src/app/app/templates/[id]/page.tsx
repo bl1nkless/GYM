@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ExercisePickerModal } from "@/components/workouts/ExercisePickerModal";
@@ -363,8 +362,8 @@ export default function TemplateDetailsPage() {
       <header className="sticky top-0 z-40 border-b border-zinc-800 bg-black/80 px-4 pt-12 pb-4 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link
-              href="/app/templates"
+            <button
+              onClick={() => router.back()}
               className="-ml-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
             >
               <svg
@@ -380,7 +379,7 @@ export default function TemplateDetailsPage() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-            </Link>
+            </button>
             <h1 className="text-xl font-bold text-white">Шаблон</h1>
           </div>
 
