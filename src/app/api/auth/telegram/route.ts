@@ -6,29 +6,42 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 
 /**
- * Validate Telegram initData using HMAC-SHA256
- * Secret = sha256(BOT_TOKEN)
+ * Validate Telegram initData using HMAC-SHA256 (Mini Apps scheme)
+ * https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
  */
 function validateInitData(initData: string, botToken: string): boolean {
-  const url = new URLSearchParams(initData);
-  const data: Record<string, string> = {};
-  url.forEach((v, k) => (data[k] = v));
+  const params = new URLSearchParams(initData);
+  const hash = params.get("hash");
+  if (!hash) return false;
+  params.delete("hash");
 
-  const hash = data.hash;
-  delete data.hash;
-
-  const checkString = Object.keys(data)
-    .sort()
-    .map((k) => `${k}=${data[k]}`)
+  // Собираем data_check_string: k=v построчно по ключам в алфавитном порядке
+  const dataCheckString = [...params.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}=${v}`)
     .join("\n");
 
-  const secretKey = crypto.createHash("sha256").update(botToken).digest();
-  const h = crypto
+  // 1) secret_key = HMAC_SHA256("WebAppData", botToken)  (ключ = "WebAppData")
+  const secretKey = crypto
+    .createHmac("sha256", "WebAppData")
+    .update(botToken)
+    .digest();
+
+  // 2) hash_local = HMAC_SHA256(secret_key, data_check_string) -> hex
+  const localHashHex = crypto
     .createHmac("sha256", secretKey)
-    .update(checkString)
+    .update(dataCheckString)
     .digest("hex");
 
-  return h === hash;
+  // Сравниваем в константном времени для безопасности
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(localHashHex, "hex"),
+      Buffer.from(hash, "hex")
+    );
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(req: NextRequest) {
