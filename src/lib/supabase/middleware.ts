@@ -41,7 +41,18 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Protected routes - redirect to auth if not logged in
-  if (!user && request.nextUrl.pathname.startsWith("/app")) {
+  // BUT: skip this check for Telegram Mini Apps - they handle auth differently
+  // Check if this might be a Telegram WebApp request
+  const userAgent = request.headers.get("user-agent") || "";
+  const isTelegramWebApp =
+    userAgent.includes("Telegram") ||
+    request.headers.get("sec-fetch-dest") === "iframe";
+
+  if (
+    !user &&
+    request.nextUrl.pathname.startsWith("/app") &&
+    !isTelegramWebApp
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth";
     return NextResponse.redirect(url);
