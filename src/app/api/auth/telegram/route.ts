@@ -53,7 +53,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate initData signature
-    if (!validateInitData(initData, BOT_TOKEN)) {
+    const isValid = validateInitData(initData, BOT_TOKEN);
+    console.log("[TG Auth] initData validation:", isValid ? "PASS" : "FAIL");
+    console.log("[TG Auth] BOT_TOKEN length:", BOT_TOKEN.length);
+
+    if (!isValid) {
       console.warn("Invalid Telegram initData signature");
       return NextResponse.json({ error: "Invalid initData" }, { status: 401 });
     }
