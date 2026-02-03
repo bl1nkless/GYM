@@ -99,13 +99,17 @@ export async function POST(req: NextRequest) {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
-    const anon = createClient(SUPABASE_URL, ANON_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
 
-    // Idempotently create/update user
+    // Generate deterministic password from tg_id + bot_token (never exposed)
+    const password = crypto
+      .createHmac("sha256", BOT_TOKEN)
+      .update(`tg_user_${tg_id}`)
+      .digest("hex");
+
+    // Try to create user (will fail if exists - that's ok)
     const { error: createErr } = await admin.auth.admin.createUser({
       email,
+      password,
       email_confirm: true,
       user_metadata: {
         telegram_id: tg_id,
@@ -117,58 +121,38 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Ignore "user already exists" errors (422 or 409)
+    // Ignore "user already exists" errors
     if (createErr) {
-      const status = (createErr as unknown as { status?: number }).status;
-      if (status !== 422 && status !== 409) {
-        // Check if it's actually a duplicate user error by message
-        if (!createErr.message?.includes("already been registered")) {
-          console.error("Error creating user:", createErr);
-          return NextResponse.json(
-            { error: "Failed to create user" },
-            { status: 500 }
-          );
-        }
+      const msg = createErr.message || "";
+      if (
+        !msg.includes("already been registered") &&
+        !msg.includes("already exists")
+      ) {
+        console.error("Error creating user:", createErr);
+        return NextResponse.json(
+          { error: "Failed to create user" },
+          { status: 500 }
+        );
       }
     }
 
-    // Generate magiclink to get OTP
-    const { data: link, error: linkErr } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
+    // Sign in with password to get session
+    const { data: signInData, error: signInErr } =
+      await admin.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (linkErr || !link) {
-      console.error("Error generating link:", linkErr);
+    if (signInErr || !signInData?.session) {
+      console.error("Error signing in:", signInErr);
       return NextResponse.json(
-        { error: linkErr?.message || "Failed to generate link" },
+        { error: signInErr?.message || "Sign in failed" },
         { status: 500 }
       );
     }
 
-    // Extract OTP from link properties
-    const otp = link.properties?.email_otp as string | undefined;
-    if (!otp) {
-      console.error("No OTP in generated link");
-      return NextResponse.json({ error: "No OTP generated" }, { status: 500 });
-    }
-
-    // Verify OTP to get session (server-side)
-    const { data: verified, error: vErr } = await anon.auth.verifyOtp({
-      email,
-      token: otp,
-      type: "magiclink",
-    });
-
-    if (vErr || !verified?.session) {
-      console.error("Error verifying OTP:", vErr);
-      return NextResponse.json(
-        { error: vErr?.message || "Verification failed" },
-        { status: 500 }
-      );
-    }
-
-    const { access_token, refresh_token, expires_in, user } = verified.session;
+    const { access_token, refresh_token, expires_in, user } =
+      signInData.session;
 
     return NextResponse.json({
       access_token,
