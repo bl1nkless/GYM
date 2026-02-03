@@ -47,9 +47,9 @@ export function QuickStartSection() {
       </div>
 
       <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-        {/* New Workout Card */}
+        {/* New Template Card */}
         <Link
-          href="/app/workouts/active"
+          href="/app/templates/new"
           className="group flex h-36 w-32 flex-shrink-0 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-700 text-zinc-500 transition-all hover:border-orange-500 hover:bg-zinc-900/50 hover:text-orange-500"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 transition-colors group-hover:bg-orange-500/20">
