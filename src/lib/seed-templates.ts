@@ -2,77 +2,101 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-// Твоя программа Upper/Lower
+// Стартовая программа Upper/Lower (4 дня в неделю)
 const DEFAULT_TEMPLATES = [
   {
-    name: "Upper Body: A",
+    name: "Верх А",
     exercises: [
       { name: "Тяга верхнего блока", sets: "2x15", muscleGroup: "Спина" },
-      { name: "Жим в Смите на наклонной", sets: "3x6", muscleGroup: "Грудь" },
-      { name: "Пек-дек (бабочка)", sets: "2x15-20", muscleGroup: "Грудь" },
+      { name: "Жим на наклонной в Смите", sets: "3x6", muscleGroup: "Грудь" },
       {
-        name: "Тяга в тренажере (верх спины)",
+        name: "Сведение рук (Pec Deck)",
+        sets: "2x до отказа (15-20)",
+        muscleGroup: "Грудь",
+      },
+      {
+        name: "Тяга в тренажёре (верх спины)",
         sets: "3x10",
         muscleGroup: "Спина",
       },
       {
-        name: "Махи в кроссовере в стороны",
-        sets: "3x отказ",
+        name: "Разводка в кроссовере",
+        sets: "3x до отказа",
         muscleGroup: "Плечи",
       },
-      { name: "Сгибания на Скотта", sets: "3x10", muscleGroup: "Бицепс" },
+      {
+        name: "Сгибания на скамье Скотта",
+        sets: "3x10",
+        muscleGroup: "Бицепс",
+      },
       { name: "Французский жим стоя", sets: "3x10", muscleGroup: "Трицепс" },
     ],
   },
   {
-    name: "Lower Body: A",
+    name: "Низ А",
     exercises: [
-      { name: "Сгибания ног сидя", sets: "2x15", muscleGroup: "Бицепс бедра" },
-      { name: "Гакк-присед", sets: "3x8", muscleGroup: "Квадрицепсы" },
+      { name: "Сгибание ног сидя", sets: "2x15", muscleGroup: "Бицепс бедра" },
       {
-        name: "Болгарские сплит-приседания",
-        sets: "3x10",
+        name: "Гакк-присед (квадрицепс)",
+        sets: "3x8",
         muscleGroup: "Квадрицепсы",
       },
-      { name: "Подъемы на носки стоя", sets: "3x15", muscleGroup: "Икры" },
+      {
+        name: "Болгарские сплит-приседы",
+        sets: "3x10 (на ногу)",
+        muscleGroup: "Квадрицепсы",
+      },
+      { name: "Подъём на носки стоя", sets: "3x15", muscleGroup: "Икры" },
     ],
   },
   {
-    name: "Upper Body: B",
+    name: "Верх Б",
     exercises: [
-      { name: "Жим гантелей на наклонной", sets: "3x10", muscleGroup: "Грудь" },
-      { name: "Тяга с опорой на грудь", sets: "3x10", muscleGroup: "Спина" },
-      { name: "Французский жим лежа", sets: "3x8-12", muscleGroup: "Трицепс" },
       {
-        name: "Сгибания на наклонной",
-        sets: "2x отказ",
+        name: "Жим гантелей на наклонной",
+        sets: "3x10",
+        muscleGroup: "Грудь",
+      },
+      {
+        name: "Тяга с упором в грудь (широкий)",
+        sets: "3x10",
+        muscleGroup: "Спина",
+      },
+      { name: "Французский жим лёжа", sets: "3x8-12", muscleGroup: "Трицепс" },
+      {
+        name: "Сгибания с гантелями на наклонной",
+        sets: "2x до отказа",
         muscleGroup: "Бицепс",
       },
       {
         name: "Тяга верхнего блока обратным хватом",
-        sets: "3x10",
+        sets: "2x до отказа + 1x10 (дропсет)",
         muscleGroup: "Спина",
       },
       {
-        name: "Разведение рук в кроссовере",
-        sets: "2x отказ",
+        name: "Разводка в кроссовере назад",
+        sets: "2x до отказа + частичные",
         muscleGroup: "Плечи",
       },
     ],
   },
   {
-    name: "Lower Body: B (+плечи)",
+    name: "Низ Б (+плечи)",
     exercises: [
       { name: "Жим гантелей сидя", sets: "2x8", muscleGroup: "Плечи" },
       {
-        name: "Махи в кроссовере в стороны",
-        sets: "3x отказ",
+        name: "Разводка в кроссовере",
+        sets: "3x до отказа",
         muscleGroup: "Плечи",
       },
       { name: "Жим ногами", sets: "2x8-10", muscleGroup: "Квадрицепсы" },
-      { name: "Разгибания ног", sets: "2x отказ", muscleGroup: "Квадрицепсы" },
+      {
+        name: "Разгибание ног",
+        sets: "2x до отказа + частичные",
+        muscleGroup: "Квадрицепсы",
+      },
       { name: "Румынская тяга", sets: "3x15", muscleGroup: "Бицепс бедра" },
-      { name: "Подъемы на носки в Смите", sets: "3x15", muscleGroup: "Икры" },
+      { name: "Подъём на носки в Смите", sets: "3x15", muscleGroup: "Икры" },
     ],
   },
 ];
