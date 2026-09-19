@@ -367,7 +367,6 @@ function NewWorkoutContent() {
             workout_template_exercises (
               id,
               order_index,
-              sets_count,
               alternative_exercise_ids,
               exercises (
                 *,

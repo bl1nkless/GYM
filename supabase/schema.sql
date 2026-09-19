@@ -97,7 +97,8 @@ CREATE TABLE IF NOT EXISTS workout_template_exercises (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   template_id UUID NOT NULL REFERENCES workout_templates(id) ON DELETE CASCADE,
   exercise_id UUID NOT NULL REFERENCES exercises(id),
-  order_index INT NOT NULL DEFAULT 0
+  order_index INT NOT NULL DEFAULT 0,
+  sets_count INT NOT NULL DEFAULT 3
 );
 
 -- ============================================
