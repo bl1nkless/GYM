@@ -246,7 +246,7 @@ function TemplatePickerModal({
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pb-4">
-          <h2 className="text-xl font-bold text-white">Начать тренировку</h2>
+          <h2 className="text-xl font-bold text-white">Выбрать тренировку</h2>
           <button
             onClick={onClose}
             className="-mr-2 rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
@@ -290,7 +290,7 @@ function TemplatePickerModal({
               <div className="flex items-center gap-2 pt-3 pb-1">
                 <Zap size={14} className="text-zinc-500" />
                 <span className="text-sm font-medium text-zinc-500">
-                  Быстрый старт из шаблона
+                  Шаблоны тренировок
                 </span>
               </div>
 
