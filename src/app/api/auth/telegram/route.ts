@@ -21,8 +21,6 @@ export function validateInitData(initData: string, botToken: string): boolean {
     .map(([k, v]) => `${k}=${v}`)
     .join("\n");
 
-  // 1) secret_key = HMAC_SHA256(botToken, "WebAppData")
-  //    (bot token is the HMAC key, WebAppData is the message)
   // Telegram Mini Apps: HMAC key is the constant, message is the bot token.
   const secretKey = crypto
     .createHmac("sha256", "WebAppData")
@@ -50,7 +48,9 @@ export async function POST(req: NextRequest) {
   try {
     const { initData } = await req.json();
 
-    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+      ?.trim()
+      .replace(/^['"]|['"]$/g, "");
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
