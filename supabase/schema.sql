@@ -112,6 +112,56 @@ ALTER TABLE exercise_aliases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workout_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workout_template_exercises ENABLE ROW LEVEL SECURITY;
 
+-- Политики для шаблонов тренировок
+CREATE POLICY "Users can view own templates" ON workout_templates
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own templates" ON workout_templates
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own templates" ON workout_templates
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own templates" ON workout_templates
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Политики для упражнений в шаблонах
+CREATE POLICY "Users can view own template exercises" ON workout_template_exercises
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM workout_templates wt
+      WHERE wt.id = workout_template_exercises.template_id
+      AND wt.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can create own template exercises" ON workout_template_exercises
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM workout_templates wt
+      WHERE wt.id = workout_template_exercises.template_id
+      AND wt.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can update own template exercises" ON workout_template_exercises
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM workout_templates wt
+      WHERE wt.id = workout_template_exercises.template_id
+      AND wt.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can delete own template exercises" ON workout_template_exercises
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM workout_templates wt
+      WHERE wt.id = workout_template_exercises.template_id
+      AND wt.user_id = auth.uid()
+    )
+  );
+
 -- Политики для workout_sessions
 CREATE POLICY "Users can view own sessions" ON workout_sessions
   FOR SELECT USING (auth.uid() = user_id);

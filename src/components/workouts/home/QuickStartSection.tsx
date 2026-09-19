@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useTelegram } from "@/components/providers/TelegramProvider";
 import {
   TEMPLATES_PREVIEW_LIMIT,
   useTemplatesPreview,
@@ -15,9 +16,44 @@ import { SkeletonList } from "./SkeletonList";
 
 export function QuickStartSection() {
   const [seeding, setSeeding] = useState(false);
+  const autoSeedStarted = useRef(false);
+  const { isLoading: authLoading, isAuthenticated } = useTelegram();
   const { templates, loading, reload } = useTemplatesPreview(
     TEMPLATES_PREVIEW_LIMIT
   );
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      void reload();
+    }
+  }, [authLoading, isAuthenticated, reload]);
+
+  useEffect(() => {
+    if (
+      authLoading ||
+      !isAuthenticated ||
+      loading ||
+      templates.length > 0 ||
+      autoSeedStarted.current
+    ) {
+      return;
+    }
+
+    autoSeedStarted.current = true;
+    setSeeding(true);
+
+    void (async () => {
+      try {
+        const { seedDefaultTemplates } = await import("@/lib/seed-templates");
+        const result = await seedDefaultTemplates();
+        if (result.success) {
+          await reload();
+        }
+      } finally {
+        setSeeding(false);
+      }
+    })();
+  }, [authLoading, isAuthenticated, loading, reload, templates.length]);
 
   const handleSeedTemplates = async () => {
     setSeeding(true);
