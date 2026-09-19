@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * Validate Telegram initData using HMAC-SHA256 (Mini Apps scheme)
  * https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
  */
-function validateInitData(initData: string, botToken: string): boolean {
+export function validateInitData(initData: string, botToken: string): boolean {
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
   if (!hash) return false;
@@ -17,14 +17,15 @@ function validateInitData(initData: string, botToken: string): boolean {
 
   // Собираем data_check_string: k=v построчно по ключам в алфавитном порядке
   const dataCheckString = [...params.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
     .map(([k, v]) => `${k}=${v}`)
     .join("\n");
 
-  // 1) secret_key = HMAC_SHA256("WebAppData", botToken)  (ключ = "WebAppData")
+  // 1) secret_key = HMAC_SHA256(botToken, "WebAppData")
+  //    (bot token is the HMAC key, WebAppData is the message)
   const secretKey = crypto
-    .createHmac("sha256", "WebAppData")
-    .update(botToken)
+    .createHmac("sha256", botToken)
+    .update("WebAppData")
     .digest();
 
   // 2) hash_local = HMAC_SHA256(secret_key, data_check_string) -> hex
