@@ -14,10 +14,10 @@ describe("validateInitData", () => {
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([key, value]) => `${key}=${value}`)
       .join("\n");
-    const secretKey = crypto
-      .createHmac("sha256", botToken)
-      .update("WebAppData")
-      .digest();
+  const secretKey = crypto
+    .createHmac("sha256", "WebAppData")
+    .update(botToken)
+    .digest();
     const hash = crypto
       .createHmac("sha256", secretKey)
       .update(dataCheckString)

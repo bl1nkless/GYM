@@ -23,9 +23,10 @@ export function validateInitData(initData: string, botToken: string): boolean {
 
   // 1) secret_key = HMAC_SHA256(botToken, "WebAppData")
   //    (bot token is the HMAC key, WebAppData is the message)
+  // Telegram Mini Apps: HMAC key is the constant, message is the bot token.
   const secretKey = crypto
-    .createHmac("sha256", botToken)
-    .update("WebAppData")
+    .createHmac("sha256", "WebAppData")
+    .update(botToken)
     .digest();
 
   // 2) hash_local = HMAC_SHA256(secret_key, data_check_string) -> hex
